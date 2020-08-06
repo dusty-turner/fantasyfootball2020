@@ -1,0 +1,48 @@
+---
+title: "AO 2020 Fantasy Football"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+```
+
+
+Row {data-height=250}
+-------------------------------------
+
+### Chart 1
+
+```{r}
+valueBox("iris$Sepal.Length %>% mean", icon = "fa-pencil")
+```
+
+### box 2
+
+```{r}
+valueBox(iris$Sepal.Width %>% mean, icon = "fa-pencil")
+```
+
+### box 3
+
+```{r}
+valueBox(iris$Petal.Length %>% mean, icon = "fa-pencil")
+
+```
+
+Row {data-height=350}
+-------------------------------------
+   
+### Chart 2
+
+```{r}
+```   
+    
+### Chart 3
+
+```{r}
+```
