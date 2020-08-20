@@ -6,7 +6,7 @@ get_api_data <- function(leagueID = "89417258"){
 base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
 year = "2020"
 mid = "/segments/0/leagues/"
-leagueID = "89417258"
+leagueID = leagueID
 tail = str_c("?view=mDraftDetail",
 "&view=mLiveScoring&view=mMatchupScore",
 "&view=mPendingTransactions",
