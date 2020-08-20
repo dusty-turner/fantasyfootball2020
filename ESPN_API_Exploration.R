@@ -1,6 +1,8 @@
 library(tidyverse)
 library(ggrepel)
 
+get_api_data <- function(leagueID = "89417258"){
+
 base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
 year = "2020"
 mid = "/segments/0/leagues/"
@@ -27,8 +29,13 @@ ESPNGet$status_code
 
 ESPNRaw <- rawToChar(ESPNGet$content)
 ESPNFromJSON <- jsonlite::fromJSON(ESPNRaw)
+return(ESPNFromJSON)
+}
 
-listviewer::jsonedit(ESPNFromJSON)
+data_for_processing <- get_api_data(leagueID = "89417258")
+
+
+listviewer::jsonedit(data_for_processing)
 
 
 ESPNFromJSON %>% listviewer::jsonedit()
