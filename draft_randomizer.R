@@ -49,7 +49,7 @@ game_and_team_info <-
 
 
 team <- 
-game_and_team_info %>% 
+game_and_team_info %>% ==
   mutate(team_name = str_c(location.y," ",nickname)) %>% 
   select(team_name) %>% 
   distinct() 
@@ -73,11 +73,11 @@ reveal_draft_order <- function(n, wait = TRUE){
   message(str_c(draft$team_name, praise::praise(template = ", ${Exclamation}!")))
   if(wait){Sys.sleep(15)}
 }
-reveal_draft_order(1, wait = TRUE)
+# reveal_draft_order(1, wait = TRUE)
 
 
 
-purrr::walk(1:12, ~reveal_draft_order(.x,wait = F))
+purrr::walk(1:12, ~reveal_draft_order(.x,wait = T))
 
 
 
