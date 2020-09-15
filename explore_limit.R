@@ -1,7 +1,9 @@
+library(tidyverse)
+
 base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
 year = "2020"
 mid = "/segments/0/leagues/"
-leagueID = leagueID
+leagueID = "89417258"
 tail = str_c("?view=mDraftDetail",
              "&view=mLiveScoring&view=mMatchupScore",
              "&view=mPendingTransactions",
@@ -24,7 +26,12 @@ url = paste0(base,year,mid,leagueID,tail,"&limit=1000")
 
 
 ESPNGet <- httr::GET(url = url)
-# ESPNGet <- httr::GET(url = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/2020/segments/0/leagues/89417258?view=mDraftDetail&view=mLiveScoring&view=mMatchupScore&view=mPendingTransactions&view=mPositionalRatings&view=mSettings&view=mTeam&view=modular&view=mNav")
+ESPNGet <- httr::GET(url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/2020/segments/0/leagues/89417258?view=mPositionalRatings&view=mRoster&view=mSettings&view=mTeam&view=modular&view=mNav")
+ESPNGet <- httr::GET(url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/2020/segments/0/leagues/89417258?view=modular&view=mNav&view=mMatchupScore&view=mScoreboard&view=mStatus&view=mSettings&view=mTeam&view=mPendingTransactions")
+ESPNGet <- httr::GET(url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/2020/segments/0/leagues/89417258?view=modular&view=mNav&view=mMatchupScore&view=mScoreboard&view=mStatus&view=mSettings&view=mTeam&view=mPendingTransactions?scoringPeriodId=1")
+ESPNGet <- httr::GET(url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/2020/segments/0/leagues/89417258?view=mPositionalRatings&view=mRoster&view=mSettings&view=mTeam&view=modular&view=mNav")
+ESPNGet <- httr::GET(url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/2020/players?scoringPeriodId=1&view=players_wl")
+ESPNGet <- httr::GET(url = "https://fantasy.espn.com/apis/v3/games/ffl/seasons/2020/segments/0/leagues/89417258?view=modular&view=mNav&view=mMatchupScore&view=mScoreboard&view=mStatus&view=mTeam&view=mPendingTransactions&scoringPeriodId=2")
 ESPNGet$status_code
 
 ESPNRaw <- rawToChar(ESPNGet$content)
