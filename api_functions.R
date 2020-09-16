@@ -42,7 +42,8 @@ player_extract <- function(team_number = 1, player_number = 1){
       scoringPeriodId = ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats[[player_number]]$scoringPeriodId,
       statsplitTypeId = ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats[[player_number]]$statSplitTypeId,
       externalId = ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats[[player_number]]$externalId,
-      lineupSlot_id = ESPNFromJSON$teams$roster$entries[[team_number]]$lineupSlotId[player_number]
+      lineupSlot_id = ESPNFromJSON$teams$roster$entries[[team_number]]$lineupSlotId[player_number],
+      eligibleSlots = list(ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$eligibleSlots[[player_number]])
     ) %>% 
     filter(seasonId==2020) %>% 
     filter(scoringPeriodId != 0)
@@ -105,8 +106,7 @@ total_standings <-
   relocate(contains("perc"), .after = last_col()) %>% 
   ungroup() %>% 
   mutate(luck = (-win_perc + week_win_perc)/sqrt(2)) 
-  mutate(luck = abs(luck)) %>% 
-  mutate(luck = max(luck) - luck)
+  
 
 luck_help_df = tibble(win_perc = c(0.3,0.3,.7,.7), week_win_perc = c(0,1,1,0), labs = c("Bad","Unlucky","Good","Lucky"))
 
@@ -129,3 +129,103 @@ plot_luck_chart <- function(total_standings = total_standings){
 
 plot_luck_chart(total_standings = total_standings)
 
+
+team_list %>% 
+  filter(lineupSlot_id != 20) %>% 
+  group_by(team, scoringPeriodId, points_type) %>% 
+  summarise(points = sum(appliedTotal)) %>% 
+  mutate(this_week = scoringPeriodId == per_id) %>% 
+  pivot_wider(names_from = points_type,values_from = points) %>% 
+  mutate(net_points = actual - projected) %>% 
+  ggplot(aes(x=projected, y = net_points, color = net_points)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0)) +
+  scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
+  geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
+  labs(title = "Are your players letting you down?",subtitle = "How many more (or less) points did your team score than projected",
+       x = "Projected Points", y = "Net Points (Actual - Projected)?") +
+  theme(legend.position = "none") +
+  ylim(-50,50)
+
+# 2 rb
+# 4 wr
+# 23 flex
+# 0 qb
+# 6 TE
+# 16 def
+# 17 kicker
+
+best_roster <- function(team_num = 1){
+  base <-
+    team_list %>% 
+    filter(points_type == "actual") %>%
+    filter(teamId == team_num) %>%
+    unnest(eligibleSlots) %>% 
+    group_by(scoringPeriodId)
+    
+  rbs <-
+    base %>% 
+    filter(eligibleSlots == 2) %>%
+    slice_max(appliedTotal, n = 2)
+
+  wrs <-
+    base %>% 
+    filter(eligibleSlots == 4) %>%
+    slice_max(appliedTotal, n = 2)
+
+  tes <-
+    base %>% 
+    filter(eligibleSlots == 6) %>%
+    slice_max(appliedTotal, n = 1)
+
+  qbs <-
+    base %>% 
+    filter(eligibleSlots == 0) %>%
+    slice_max(appliedTotal, n = 1)
+
+  def <-
+    base %>% 
+    filter(eligibleSlots == 16) %>%
+    slice_max(appliedTotal, n = 1)
+
+  kik <-
+    base %>% 
+    filter(eligibleSlots == 17) %>%
+    slice_max(appliedTotal, n = 1)
+  
+  flex <-
+  base %>% 
+    filter(!fullName %in% c(rbs$fullName,wrs$fullName,tes$fullName,qbs$fullName,def$fullName,kik$fullName)) %>% 
+    filter(eligibleSlots == 23) %>% 
+    slice_max(appliedTotal,1)
+  
+  best_roster <-
+  bind_rows(rbs,wrs,tes,qbs,def,kik,flex)  
+  
+ return(best_roster)
+}
+
+best_points <-
+1:number_of_teams %>% 
+  map_dfr(~best_roster(team_num = .x)) %>% 
+  group_by(scoringPeriodId, team) %>% 
+  summarise(best_points = sum(appliedTotal))
+
+week_points <-
+team_list %>% 
+  filter(lineupSlot_id != 20) %>% 
+  filter(points_type == "actual") %>% 
+  group_by(scoringPeriodId, team) %>% 
+  summarise(week_points = sum(appliedTotal))
+
+best_points %>% 
+  left_join(week_points) %>% 
+  mutate(net_points = best_points - week_points) %>% 
+  ggplot(aes(x=week_points, y = net_points, color = net_points)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0)) +
+  scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
+  geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
+  labs(title = "Are you letting your players down?",subtitle = "How many more points could you have scored if you picked your best lineup",
+       x = "Projected Points", y = "Fruit left on the vine (Actual Points - Potential Points)?") +
+  theme(legend.position = "none")
