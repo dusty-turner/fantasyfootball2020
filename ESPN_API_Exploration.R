@@ -66,11 +66,12 @@ ESPNFromJSON$players$player %>% as_tibble() %>% select(stats) %>% unnest(cols = 
 
 
 # week_of <- 1
+game_and_team_info = get_information()
 
 get_standings <- function(game_and_team_info = game_and_team_info, week_of = 1){
 
 standings <-
-game_and_team_info %>% 
+game_and_team_info[[3]] %>% 
   filter(matchupPeriodId <= week_of) %>% 
   arrange(game_id) %>% 
   # mutate(points = runif(n = nrow(.),min = 60,max = 100)) %>% 
@@ -87,9 +88,11 @@ return(standings)
 
 }
 
+standings <- get_standings(game_and_team_info = game_and_team_info, week_of = 1)
+
 luck_help_df = tibble(win_perc = c(0.1,0.1,.9,.9), week_win_perc = c(0,1,1,0), labs = c("Bad","Lucky","Good","Unlucky"))
 
-plot_luck_chart <- function(standings = get_standing()){
+plot_luck_chart <- function(standings = get_standings()){
 standings %>% 
   mutate(luck = (-win_perc + week_win_perc)/sqrt(2)) %>% 
   ggplot(aes(x=win_perc,y=week_win_perc, color = luck)) +
@@ -110,3 +113,4 @@ ESPNFromJSON %>% listviewer::jsonedit()
 # get_information
 
 # ESPNFromJSON$
+plot_luck_chart(standings = get_standings(game_and_team_info = game_and_team_info,week_of = 1))
