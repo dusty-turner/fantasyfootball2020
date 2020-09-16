@@ -1,4 +1,5 @@
 library(tidyverse)
+library(ggrepel)
 
 base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
 year = "2020"
@@ -94,7 +95,7 @@ schedule_prep %>%
 week_win_standings <-
 schedule_prep %>% 
   group_by(scoringPeriodId) %>% 
-  mutate(week_wins = rank(points)) %>% 
+  mutate(week_wins = rank(points)-1) %>% 
   mutate(week_losses = max(week_wins)-week_wins) %>% 
   group_by(team) %>% 
   summarise(week_wins = sum(week_wins), week_losses = sum(week_losses)) %>% 
@@ -129,7 +130,7 @@ plot_luck_chart <- function(total_standings = total_standings){
 
 plot_luck_chart(total_standings = total_standings)
 
-
+players_letting_down <-
 team_list %>% 
   filter(lineupSlot_id != 20) %>% 
   group_by(team, scoringPeriodId, points_type) %>% 
@@ -142,7 +143,7 @@ team_list %>%
   geom_hline(aes(yintercept = 0)) +
   scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
   geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
-  labs(title = "Are your players letting you down?",subtitle = "How many more (or less) points did your team score than projected",
+  labs(title = "Are your players letting you down?",subtitle = "How many more (or less) points did your team score than projected?",
        x = "Projected Points", y = "Net Points (Actual - Projected)?") +
   theme(legend.position = "none") +
   ylim(-50,50)
@@ -218,6 +219,7 @@ team_list %>%
   group_by(scoringPeriodId, team) %>% 
   summarise(week_points = sum(appliedTotal))
 
+letting_players_down <-
 best_points %>% 
   left_join(week_points) %>% 
   mutate(net_points = best_points - week_points) %>% 
@@ -226,6 +228,52 @@ best_points %>%
   geom_hline(aes(yintercept = 0)) +
   scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
   geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
-  labs(title = "Are you letting your players down?",subtitle = "How many more points could you have scored if you picked your best lineup",
+  labs(title = "Are you letting your players down?",subtitle = "How many more points could you have scored if you picked your best lineup?",
        x = "Projected Points", y = "Fruit left on the vine (Actual Points - Potential Points)?") +
   theme(legend.position = "none")
+
+mug <-
+week_points %>% 
+  filter(week_points == max(week_points))
+
+plunger <-
+week_points %>% 
+  filter(week_points == min(week_points))
+
+coach_let_down <-
+  best_points %>% 
+  left_join(week_points) %>% 
+  mutate(net_points = best_points - week_points) %>% 
+  filter(scoringPeriodId == max(scoringPeriodId)) %>% 
+  slice_max(net_points)
+
+best_coach <-
+  best_points %>% 
+  left_join(week_points) %>% 
+  mutate(net_points = best_points - week_points) %>% 
+  filter(scoringPeriodId == max(scoringPeriodId)) %>% 
+  slice_min(net_points)
+
+biggest_letdown <-
+team_list %>% 
+  filter(lineupSlot_id != 20) %>% 
+  group_by(team, scoringPeriodId, points_type) %>% 
+  summarise(points = sum(appliedTotal)) %>% 
+  mutate(this_week = scoringPeriodId == per_id) %>% 
+  pivot_wider(names_from = points_type,values_from = points) %>% 
+  mutate(net_points = actual - projected) %>% 
+  arrange(net_points) %>% 
+  group_by(scoringPeriodId) %>% 
+  slice_min(net_points,1)
+
+outperformance <-
+team_list %>% 
+  filter(lineupSlot_id != 20) %>% 
+  group_by(team, scoringPeriodId, points_type) %>% 
+  summarise(points = sum(appliedTotal)) %>% 
+  mutate(this_week = scoringPeriodId == per_id) %>% 
+  pivot_wider(names_from = points_type,values_from = points) %>% 
+  mutate(net_points = actual - projected) %>% 
+  arrange(net_points) %>% 
+  group_by(scoringPeriodId) %>% 
+  slice_max(net_points,1)

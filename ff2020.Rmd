@@ -6,43 +6,116 @@ output:
     vertical_layout: fill
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=FALSE, cache=F}
 library(flexdashboard)
 library(tidyverse)
+library(gt)
+library(ggrepel)
+# knitr::opts_chunk$set(cache = F)
 ```
 
+```{r,cache=T}
+source("api_functions.R")
+```
 
-Row {data-height=250}
+Overview
+===============================
+
+Row {data-height=50}
 -------------------------------------
 
-### Chart 1
+### 
 
 ```{r}
-valueBox("iris$Sepal.Length %>% mean", icon = "fa-pencil")
+valueBox(value = str_c(mug$team), caption = str_c("Week ", per_id, " Mug: ", mug$week_points, " Points"), icon = "fa-pencil")
 ```
 
-### box 2
+### 
 
 ```{r}
-valueBox(iris$Sepal.Width %>% mean, icon = "fa-pencil")
+valueBox(value = str_c(plunger$team), caption = str_c("Week ", per_id, " Plunger: ", plunger$week_points, " Points"), icon = "fa-pencil")
 ```
 
-### box 3
+### 
 
 ```{r}
-valueBox(iris$Petal.Length %>% mean, icon = "fa-pencil")
+valueBox(value = "Plunger / Mug Tally", caption = "Future Home Of",icon = "fa-pencil")
 
 ```
 
 Row {data-height=350}
 -------------------------------------
    
-### Chart 2
+### 
 
 ```{r}
+total_standings %>% select(-luck) %>% 
+  mutate(week_win_perc = round(week_win_perc,2)) %>% 
+  janitor::clean_names(case = "upper_camel") %>% 
+  arrange(-WinPerc,-WeekWinPerc) %>% 
+  gt() %>% 
+  tab_header(title = "Weekly Standings") 
+
 ```   
     
-### Chart 3
+### 
 
 ```{r}
+plot_luck_chart(total_standings = total_standings)
+```
+
+Team Performance
+===============================
+
+
+Row {data-height=50}
+-------------------------------------
+
+### Worst Coach Award:  `r str_c(coach_let_down$team)`
+
+```{r}
+gauge(coach_let_down$week_points, min = 0, max = coach_let_down$best_points, 
+      gaugeSectors(danger = c(0, coach_let_down$best_points))
+)
+
+```
+
+### Best Coach Award:  `r str_c(best_coach$team)`
+
+```{r}
+gauge(best_coach$week_points, min = 0, max = best_coach$best_points, 
+      gaugeSectors(success = c(0, best_coach$best_points))
+)
+
+```
+
+### Biggest Team Underperformance: `r str_c(biggest_letdown$team)`
+
+```{r}
+gauge(biggest_letdown$actual %>% round(2), min = 0, max = biggest_letdown$projected %>% round(2), 
+      gaugeSectors(danger = c(0, biggest_letdown$projected))
+)
+```
+
+### Biggest Team Overperformance: `r str_c(outperformance$team)`
+
+```{r}
+gauge(outperformance$projected %>% round(2), min = 0, max = outperformance$actual %>% round(2), 
+      gaugeSectors(success = c(0, outperformance$actual))
+)
+```
+
+Row {data-height=350}
+-------------------------------------
+    
+### Coaching Performance
+    
+```{r}
+players_letting_down
+```
+    
+### Player Performance
+
+```{r}
+letting_players_down
 ```
