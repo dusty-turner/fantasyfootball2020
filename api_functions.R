@@ -144,7 +144,8 @@ team_list %>%
   scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
   geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
   labs(title = "Are your players letting you down?",subtitle = "How many more (or less) points did your team score than projected?",
-       x = "Projected Points", y = "Net Points (Actual - Projected)?") +
+       x = "Projected Points", y = "Net Points (Actual - Projected)", 
+       caption = "Over the line is overperformance.  Under the line is underperformance.") +
   theme(legend.position = "none") +
   ylim(-50,50)
 
@@ -229,7 +230,8 @@ best_points %>%
   scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
   geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
   labs(title = "Are you letting your players down?",subtitle = "How many more points could you have scored if you picked your best lineup?",
-       x = "Projected Points", y = "Fruit left on the vine (Actual Points - Potential Points)?") +
+       x = "Actual Points", y = "Meat left on the bone (Actual Points - Potential Points)",
+       caption = "Higher on the Y Axis: Bad at picking the right players to start \n Higher on the X Axis: Players started scoring more points") +
   theme(legend.position = "none")
 
 mug <-
@@ -264,7 +266,8 @@ team_list %>%
   mutate(net_points = actual - projected) %>% 
   arrange(net_points) %>% 
   group_by(scoringPeriodId) %>% 
-  slice_min(net_points,1)
+  slice_min(net_points,1) %>% 
+  mutate(projected = round(projected,2))
 
 outperformance <-
 team_list %>% 
@@ -273,7 +276,89 @@ team_list %>%
   summarise(points = sum(appliedTotal)) %>% 
   mutate(this_week = scoringPeriodId == per_id) %>% 
   pivot_wider(names_from = points_type,values_from = points) %>% 
-  mutate(net_points = actual - projected) %>% 
+  mutate(net_points = actual - projected, projected = round(projected,2)) %>% 
   arrange(net_points) %>% 
   group_by(scoringPeriodId) %>% 
   slice_max(net_points,1)
+
+
+
+team_performance <- function(data = team_list, per_id_now = per_id, team_no = 5){
+  
+  team_name <- data %>% filter(teamId == team_no) %>% slice_head(1) %>% select(team) %>% pull
+  
+  plot <-
+data %>% 
+  filter(scoringPeriodId == per_id_now) %>% 
+  filter(teamId == team_no) %>% 
+  select(team,fullName,appliedTotal,points_type) %>% 
+  pivot_wider(names_from = points_type,values_from = appliedTotal) %>%
+  mutate(y = 0) %>% 
+  mutate(color = actual-projected > 0) %>% 
+  ggplot(aes(x=projected, y = y)) +
+  geom_point(size = 5) +
+  geom_point(aes(x = actual)) +
+  ylim(-5,5) +
+  scale_color_manual(values = c("Red","Green")) +
+  geom_segment(aes(x=projected, y = y, xend = actual, yend = y, color = color), arrow = arrow()) +
+  facet_wrap(~forcats::fct_reorder(fullName,projected),ncol = 1) +
+  # facet_wrap(~forcats::fct_reorder(fullName,projected),ncol = 1, labeller = labeller(size = 10)) +
+  theme(axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "none") +
+        # strip.text = element_text(size = 3)) +
+  labs(x = "Points", title = str_c("How well each player on ", team_name, " performed.") ,subtitle = "Big dots represent projected score.  Small dots represent actual score",
+      caption = "Arranged by projected score")
+
+  plot
+  
+return(list(team = team_name, plot = plot))
+
+}
+
+plots <- purrr::map(.x = 1:number_of_teams, .f = ~team_performance(team_no = .x))
+
+
+
+# 2 rb
+# 4 wr
+# 23 flex
+# 0 qb
+# 6 TE
+# 16 def
+# 17 kicker
+
+player_predictions_hist <-
+team_list %>% 
+  unnest(eligibleSlots) %>% 
+  filter(eligibleSlots %in% c(2,4,0,6,16,17)) %>% 
+  mutate(position = case_when(eligibleSlots == 0 ~ "Quarter Back",
+                              eligibleSlots == 2 ~ "Running Back",
+                              eligibleSlots == 4 ~ "Wide Receiver",
+                              eligibleSlots == 6 ~ "Tight End",
+                              eligibleSlots == 16 ~ "Defense",
+                              eligibleSlots == 17 ~ "Kicker",
+                              )) %>% 
+  select(fullName,appliedTotal,points_type,scoringPeriodId,eligibleSlots, position)  %>% 
+  pivot_wider(names_from = points_type, values_from = appliedTotal) %>% 
+  mutate(overperformance = actual - projected) %>% 
+  ggplot(aes(x=overperformance, fill = position)) +
+  geom_histogram() +
+  geom_vline(aes(xintercept = 0)) +
+  facet_wrap(~forcats::fct_reorder(position,eligibleSlots), ncol = 1) +
+  theme(legend.position = "none",
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.title.y = element_blank()) +
+  labs(x = "Actual - Predicted Points",title = "How good are ESPN's Predictions?",caption = "Positive means ESPN underpredicted performance.")
+  
+
+team_list %>% 
+  unnest(eligibleSlots) %>% 
+  filter(eligibleSlots %in% c(2,4,0,6,16,17)) %>% 
+  select(fullName,appliedTotal,points_type,scoringPeriodId,eligibleSlots) %>% 
+  pivot_wider(names_from = points_type, values_from = appliedTotal) %>% 
+  mutate(overperformance = actual - projected) %>% 
+  ggplot(aes(x=projected, y = actual, color = as.factor(eligibleSlots))) +
+  geom_point()

@@ -1,5 +1,5 @@
 ---
-title: "AO 2020 Fantasy Football"
+title: "OA 2020 Fantasy Football"
 output: 
   flexdashboard::flex_dashboard:
     orientation: rows
@@ -11,7 +11,7 @@ library(flexdashboard)
 library(tidyverse)
 library(gt)
 library(ggrepel)
-# knitr::opts_chunk$set(cache = F)
+knitr::opts_chunk$set(cache = T)
 ```
 
 ```{r,cache=T}
@@ -68,10 +68,27 @@ Team Performance
 ===============================
 
 
-Row {data-height=50}
+Row {data-height=70}
 -------------------------------------
 
-### Worst Coach Award:  `r str_c(coach_let_down$team)`
+### Biggest Team Underperformance: `r str_c(biggest_letdown$team, "\n", biggest_letdown$actual, " out of ", biggest_letdown$projected, " projected points")`
+
+```{r}
+gauge(biggest_letdown$actual %>% round(2), min = 0, max = biggest_letdown$projected %>% round(2), 
+      gaugeSectors(danger = c(0, biggest_letdown$projected))
+)
+
+```
+
+### Biggest Team Overperformance: `r str_c(outperformance$team, "\n", outperformance$actual, " out of ", outperformance$projected, " projected points")`
+
+```{r}
+gauge(outperformance$projected %>% round(2), min = 0, max = outperformance$actual %>% round(2), 
+      gaugeSectors(success = c(0, outperformance$actual))
+)
+```
+
+### Worst Coach Award:  `r str_c(coach_let_down$team, "\n", coach_let_down$week_points, " out of ", coach_let_down$best_points, " possible points")`
 
 ```{r}
 gauge(coach_let_down$week_points, min = 0, max = coach_let_down$best_points, 
@@ -80,7 +97,7 @@ gauge(coach_let_down$week_points, min = 0, max = coach_let_down$best_points,
 
 ```
 
-### Best Coach Award:  `r str_c(best_coach$team)`
+### Best Coach Award:  `r str_c(best_coach$team, "\n", best_coach$week_points, " out of ", best_coach$best_points, " possible points")`
 
 ```{r}
 gauge(best_coach$week_points, min = 0, max = best_coach$best_points, 
@@ -89,33 +106,114 @@ gauge(best_coach$week_points, min = 0, max = best_coach$best_points,
 
 ```
 
-### Biggest Team Underperformance: `r str_c(biggest_letdown$team)`
-
-```{r}
-gauge(biggest_letdown$actual %>% round(2), min = 0, max = biggest_letdown$projected %>% round(2), 
-      gaugeSectors(danger = c(0, biggest_letdown$projected))
-)
-```
-
-### Biggest Team Overperformance: `r str_c(outperformance$team)`
-
-```{r}
-gauge(outperformance$projected %>% round(2), min = 0, max = outperformance$actual %>% round(2), 
-      gaugeSectors(success = c(0, outperformance$actual))
-)
-```
 
 Row {data-height=350}
 -------------------------------------
     
-### Coaching Performance
+### Player Performance
     
 ```{r}
 players_letting_down
 ```
     
-### Player Performance
+### Coaching Performance
 
 ```{r}
 letting_players_down
 ```
+
+Team Report
+===============================
+
+Row {.tabset .tabset-fade}
+-------------------------------------
+   
+### `r plots[[1]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[1]]$plot
+```   
+
+### `r plots[[2]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[2]]$plot
+```
+
+
+### `r plots[[3]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[3]]$plot
+```
+
+
+### `r plots[[4]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[4]]$plot
+```
+
+
+### `r plots[[5]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[5]]$plot
+```
+
+
+### `r plots[[6]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[6]]$plot
+```
+
+
+### `r plots[[7]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[7]]$plot
+```
+
+
+### `r plots[[8]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[8]]$plot
+```
+
+
+### `r plots[[9]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[9]]$plot
+```
+
+
+### `r plots[[10]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[10]]$plot
+```
+
+
+### `r plots[[11]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[11]]$plot
+```
+
+
+### `r plots[[12]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[12]]$plot
+```
+
+ESPN Predictions
+===============================
+
+```{r}
+player_predictions_hist
+```
+
