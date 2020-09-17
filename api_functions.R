@@ -4,7 +4,7 @@ library(ggrepel)
 base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
 year = "2020"
 mid = "/segments/0/leagues/"
-leagueID = "89417258"
+leagueID = "847888"
 tail = str_c("?view=mDraftDetail",
              "&view=mLiveScoring",
              "&view=mMatchupScore,",
@@ -20,7 +20,6 @@ tail = str_c("?view=mDraftDetail",
              )
 
 
-
 per_id <- 1
 url = paste0(base,year,mid,leagueID,tail,per_id)
 
@@ -30,7 +29,16 @@ ESPNFromJSON <- jsonlite::fromJSON(ESPNRaw)
 
 ESPNFromJSON %>% listviewer::jsonedit()
 
+roster_size <- 16
+number_of_teams <- length(ESPNFromJSON$teams$id)
 
+n_qb <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`0`
+n_rb <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`2`
+n_wr <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`4`
+n_flex <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`23`
+n_te <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`6`
+n_dst <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`16`
+n_k <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`17`
 ## one players stats
 player_extract <- function(team_number = 1, player_number = 1){
   player_week <-
@@ -62,8 +70,8 @@ schedule <-
 # ESPNFromJSON$schedule$away$totalPoints
 
 
-roster_size <- 15
-number_of_teams <- 12
+length(ESPNFromJSON$teams$roster$entries[[1]]$playerPoolEntry$player$stats)
+
 
 player_slot <- rep(1:roster_size,number_of_teams)
 team_number <- rep(1:number_of_teams,roster_size) %>% sort()
@@ -77,7 +85,7 @@ schedule_prep <-
 team_list %>% 
   filter(lineupSlot_id != 20) %>%  # remove bench players
   filter(scoringPeriodId <= per_id) %>% 
-  group_by(team, scoringPeriodId, points_type) %>% 
+  group_by(team, scoringPeriodId, points_type)  %>% filter(points_type=="actual")-> temp # %>% 
   summarise(points = sum(appliedTotal), gameId = gameId[1]) %>% 
   arrange(scoringPeriodId,gameId) %>%
   filter(points_type == "actual") %>% 
@@ -167,38 +175,38 @@ best_roster <- function(team_num = 1){
   rbs <-
     base %>% 
     filter(eligibleSlots == 2) %>%
-    slice_max(appliedTotal, n = 2)
+    slice_max(appliedTotal, n = n_rb)
 
   wrs <-
     base %>% 
     filter(eligibleSlots == 4) %>%
-    slice_max(appliedTotal, n = 2)
+    slice_max(appliedTotal, n = n_wr)
 
   tes <-
     base %>% 
     filter(eligibleSlots == 6) %>%
-    slice_max(appliedTotal, n = 1)
+    slice_max(appliedTotal, n = n_te)
 
   qbs <-
     base %>% 
     filter(eligibleSlots == 0) %>%
-    slice_max(appliedTotal, n = 1)
+    slice_max(appliedTotal, n = n_qb)
 
   def <-
     base %>% 
     filter(eligibleSlots == 16) %>%
-    slice_max(appliedTotal, n = 1)
+    slice_max(appliedTotal, n = n_dst)
 
   kik <-
     base %>% 
     filter(eligibleSlots == 17) %>%
-    slice_max(appliedTotal, n = 1)
+    slice_max(appliedTotal, n = n_k)
   
   flex <-
   base %>% 
     filter(!fullName %in% c(rbs$fullName,wrs$fullName,tes$fullName,qbs$fullName,def$fullName,kik$fullName)) %>% 
     filter(eligibleSlots == 23) %>% 
-    slice_max(appliedTotal,1)
+    slice_max(appliedTotal,n= n_flex)
   
   best_roster <-
   bind_rows(rbs,wrs,tes,qbs,def,kik,flex)  
