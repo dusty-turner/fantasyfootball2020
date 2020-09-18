@@ -4,8 +4,9 @@ library(ggrepel)
 base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
 year = "2020"
 mid = "/segments/0/leagues/"
-# leagueID = "847888"
-leagueID = "35354777"
+leagueID = "847888"
+# leagueID = "35354777"
+# leagueID = "89417258"
 tail = str_c("?view=mDraftDetail",
              "&view=mLiveScoring",
              "&view=mMatchupScore,",
@@ -74,10 +75,10 @@ schedule <-
 get_roster_slots <- function(team_number=1){
   return(tibble(team_number = team_number, player_slot = 1:length(ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats)))
 }
-    
-team_player_slots <- purrr::map_dfr(1:number_of_teams,get_roster_slots)
 
-team_list <- purrr::map2_dfr(team_player_slots$team_number,team_player_slots$player_slot, player_extract) %>% 
+team_player_slots <- purrr::map_dfr(1:number_of_teams,~get_roster_slots(team_number = .x))
+
+team_list <- purrr::map2_dfr(team_player_slots$team_number,team_player_slots$player_slot, ~player_extract(team_number = .x,player_number = .y)) %>% 
   left_join(schedule) %>% 
   mutate(points_type = if_else(str_length(externalId) > 6, "actual", "projected")) %>% 
   relocate(team:appliedTotal, points_type)
@@ -335,7 +336,6 @@ return(list(team = team_name, plot = plot))
 }
 
 plots <- purrr::map(.x = 1:number_of_teams, .f = ~team_performance(team_no = .x))
-
 
 
 # 2 rb
