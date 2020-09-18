@@ -197,19 +197,6 @@ plots[[10]]$plot
 ```
 
 
-### `r plots[[11]]$team`
-
-```{r,fig.height=10,fig.width=10}
-plots[[11]]$plot
-```
-
-
-### `r plots[[12]]$team`
-
-```{r,fig.height=10,fig.width=10}
-plots[[12]]$plot
-```
-
 ESPN Predictions
 ===============================
 

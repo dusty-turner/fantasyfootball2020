@@ -4,7 +4,8 @@ library(ggrepel)
 base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
 year = "2020"
 mid = "/segments/0/leagues/"
-leagueID = "89417258"
+# leagueID = "847888"
+leagueID = "35354777"
 tail = str_c("?view=mDraftDetail",
              "&view=mLiveScoring",
              "&view=mMatchupScore,",
@@ -63,7 +64,7 @@ schedule <-
 
 
 roster_size <- 15
-number_of_teams <- 12
+number_of_teams <- 10
 
 player_slot <- rep(1:roster_size,number_of_teams)
 team_number <- rep(1:number_of_teams,roster_size) %>% sort()
@@ -362,3 +363,4 @@ team_list %>%
   mutate(overperformance = actual - projected) %>% 
   ggplot(aes(x=projected, y = actual, color = as.factor(eligibleSlots))) +
   geom_point()
+
