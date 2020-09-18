@@ -33,7 +33,7 @@ valueBox(value = str_c(mug$team), caption = str_c("Week ", per_id, " Mug: ", mug
 ### 
 
 ```{r}
-valueBox(value = str_c(plunger$team), caption = str_c("Week ", per_id, " Plunger: ", plunger$week_points, " Points"), icon = "fa-pencil")
+valueBox(value = str_c(unlist(plunger$team), collapse = " & "), caption = str_c("Week ", per_id, " Plunger: ", plunger$week_points[1], " Points"), icon = "fa-pencil")
 ```
 
 ### 
@@ -181,34 +181,6 @@ plots[[7]]$plot
 ```{r,fig.height=10,fig.width=10}
 plots[[8]]$plot
 ```
-
-
-<!-- ### `r plots[[9]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[9]]$plot -->
-<!-- ``` -->
-
-
-<!-- ### `r plots[[10]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[10]]$plot -->
-<!-- ``` -->
-
-
-<!-- ### `r plots[[11]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[11]]$plot -->
-<!-- ``` -->
-
-
-<!-- ### `r plots[[12]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[12]]$plot -->
-<!-- ``` -->
 
 ESPN Predictions
 ===============================
