@@ -15,7 +15,7 @@ knitr::opts_chunk$set(cache = T)
 ```
 
 ```{r,cache=T}
-source("api_functions_backup.R")
+source("api_functions.R")
 ```
 
 Overview
@@ -183,32 +183,32 @@ plots[[8]]$plot
 ```
 
 
-### `r plots[[9]]$team`
+<!-- ### `r plots[[9]]$team` -->
 
-```{r,fig.height=10,fig.width=10}
-plots[[9]]$plot
-```
-
-
-### `r plots[[10]]$team`
-
-```{r,fig.height=10,fig.width=10}
-plots[[10]]$plot
-```
+<!-- ```{r,fig.height=10,fig.width=10} -->
+<!-- plots[[9]]$plot -->
+<!-- ``` -->
 
 
-### `r plots[[11]]$team`
+<!-- ### `r plots[[10]]$team` -->
 
-```{r,fig.height=10,fig.width=10}
-plots[[11]]$plot
-```
+<!-- ```{r,fig.height=10,fig.width=10} -->
+<!-- plots[[10]]$plot -->
+<!-- ``` -->
 
 
-### `r plots[[12]]$team`
+<!-- ### `r plots[[11]]$team` -->
 
-```{r,fig.height=10,fig.width=10}
-plots[[12]]$plot
-```
+<!-- ```{r,fig.height=10,fig.width=10} -->
+<!-- plots[[11]]$plot -->
+<!-- ``` -->
+
+
+<!-- ### `r plots[[12]]$team` -->
+
+<!-- ```{r,fig.height=10,fig.width=10} -->
+<!-- plots[[12]]$plot -->
+<!-- ``` -->
 
 ESPN Predictions
 ===============================
