@@ -70,23 +70,31 @@ schedule <-
   pivot_longer(cols = c(home,away), values_to = "teamId")
 # ESPNFromJSON$schedule$away$totalPoints
 
+#Get the roster slots for each team
+get_roster_slots <- function(team_number=1){
+  return(tibble(team_number = team_number, player_slot = 1:length(ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats)))
+}
+    
+team_player_slots <- purrr::map_dfr(1:number_of_teams,get_roster_slots)
 
-length(ESPNFromJSON$teams$roster$entries[[1]]$playerPoolEntry$player$stats)
-
-
-player_slot <- rep(1:roster_size,number_of_teams)
-team_number <- rep(1:number_of_teams,roster_size) %>% sort()
-
-team_list <- purrr::map2_dfr(player_slot,team_number, .f = ~player_extract(team_number = .y,player_number = .x)) %>% 
+team_list <- purrr::map2_dfr(team_player_slots$team_number,team_player_slots$player_slot, player_extract) %>% 
   left_join(schedule) %>% 
   mutate(points_type = if_else(str_length(externalId) > 6, "actual", "projected")) %>% 
   relocate(team:appliedTotal, points_type)
+
+# player_slot <- rep(1:roster_size,number_of_teams)
+# team_number <- rep(1:number_of_teams,roster_size) %>% sort()
+
+# team_list <- purrr::map2_dfr(player_slot,team_number, .f = ~player_extract(team_number = .y,player_number = .x)) %>%
+#   left_join(schedule) %>% 
+#   mutate(points_type = if_else(str_length(externalId) > 6, "actual", "projected")) %>% 
+#   relocate(team:appliedTotal, points_type)
 
 schedule_prep <-
 team_list %>% 
   filter(lineupSlot_id != 20) %>%  # remove bench players
   filter(scoringPeriodId <= per_id) %>% 
-  group_by(team, scoringPeriodId, points_type)  %>% filter(points_type=="actual")-> temp # %>% 
+  group_by(team, scoringPeriodId, points_type)  %>% filter(points_type=="actual")  %>% 
   summarise(points = sum(appliedTotal), gameId = gameId[1]) %>% 
   arrange(scoringPeriodId,gameId) %>%
   filter(points_type == "actual") %>% 
