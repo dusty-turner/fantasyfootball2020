@@ -7,6 +7,7 @@ mid = "/segments/0/leagues/"
 # leagueID = "847888" # jim
 # leagueID = "35354777" # caa
 # leagueID = "89417258" # dusty 
+# leagueID = "206814" # twitter guy
 tail = str_c("?view=mDraftDetail",
              "&view=mLiveScoring",
              "&view=mMatchupScore,",
@@ -23,7 +24,8 @@ tail = str_c("?view=mDraftDetail",
 
 # set_league <- function(league){leagueID <- league}
 # set_per_id <- function(period){per_id <- period}
-  
+# per_id=1
+
 url = paste0(base,year,mid,leagueID,tail,per_id)
 
 ESPNGet <- httr::GET(url = url)
@@ -34,6 +36,7 @@ ESPNFromJSON %>% listviewer::jsonedit()
 
 # roster_size <- 16
 number_of_teams <- length(ESPNFromJSON$teams$id)
+team_ids <- ESPNFromJSON$teams$id
 
 n_qb <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`0`
 n_rb <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`2`
@@ -227,7 +230,7 @@ best_roster <- function(team_num = 1){
 }
 
 best_points <-
-1:number_of_teams %>% 
+team_ids %>% 
   map_dfr(~best_roster(team_num = .x)) %>% 
   group_by(scoringPeriodId, team) %>% 
   summarise(best_points = sum(appliedTotal))
@@ -336,7 +339,7 @@ return(list(team = team_name, plot = plot))
 
 }
 
-plots <- purrr::map(.x = 1:number_of_teams, .f = ~team_performance(team_no = .x))
+plots <- purrr::map(.x = team_ids, .f = ~team_performance(team_no = .x))
 
 
 # 2 rb
@@ -380,3 +383,4 @@ team_list %>%
   mutate(overperformance = actual - projected) %>% 
   ggplot(aes(x=projected, y = actual, color = as.factor(eligibleSlots))) +
   geom_point()
+
