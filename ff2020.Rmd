@@ -27,7 +27,7 @@ Row {data-height=50}
 ### 
 
 ```{r}
-valueBox(value = str_c(mug$team), caption = str_c("Week ", per_id, " Mug: ", mug$week_points, " Points"), icon = "fa-pencil")
+valueBox(value = str_c(unlist(mug$team), collapse = " & "), caption = str_c("Week ", per_id, " Mug: ", mug$week_points[1], " Points"), icon = "fa-pencil")
 ```
 
 ### 
@@ -180,6 +180,18 @@ plots[[7]]$plot
 
 ```{r,fig.height=10,fig.width=10}
 plots[[8]]$plot
+```
+
+### `r plots[[9]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[9]]$plot
+```
+
+### `r plots[[10]]$team`
+
+```{r,fig.height=10,fig.width=10}
+plots[[10]]$plot
 ```
 
 

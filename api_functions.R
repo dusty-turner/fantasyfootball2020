@@ -4,9 +4,9 @@ library(ggrepel)
 base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
 year = "2020"
 mid = "/segments/0/leagues/"
-leagueID = "847888"
-# leagueID = "35354777"
-# leagueID = "89417258"
+# leagueID = "847888" # jim
+leagueID = "35354777" # caa
+# leagueID = "89417258" # dusty 
 tail = str_c("?view=mDraftDetail",
              "&view=mLiveScoring",
              "&view=mMatchupScore,",
