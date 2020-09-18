@@ -21,8 +21,9 @@ tail = str_c("?view=mDraftDetail",
              "&scoringPeriodId="
              )
 
-
-per_id <- 1
+# set_league <- function(league){leagueID <- league}
+# set_per_id <- function(period){per_id <- period}
+  
 url = paste0(base,year,mid,leagueID,tail,per_id)
 
 ESPNGet <- httr::GET(url = url)
@@ -31,7 +32,7 @@ ESPNFromJSON <- jsonlite::fromJSON(ESPNRaw)
 
 ESPNFromJSON %>% listviewer::jsonedit()
 
-roster_size <- 16
+# roster_size <- 16
 number_of_teams <- length(ESPNFromJSON$teams$id)
 
 n_qb <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`0`
