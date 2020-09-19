@@ -4,6 +4,9 @@ output:
   flexdashboard::flex_dashboard:
     orientation: rows
     vertical_layout: fill
+params: 
+  per_id: 1
+  leagueID: 847888
 ---
 
 ```{r setup, include=FALSE, cache=F}
@@ -11,16 +14,14 @@ library(flexdashboard)
 library(tidyverse)
 library(gt)
 library(ggrepel)
-knitr::opts_chunk$set(cache = T)
+knitr::opts_chunk$set(cache = F)
 ```
 
-```{r,cache=T}
-per_id <- 1
 
-# leagueID = "847888" # jim
-# leagueID = "35354777" # caa
-# leagueID = "89417258" # dusty 
-leagueID <- 206814
+```{r,cache=F}
+per_id <- params$per_id
+leagueID <- params$leagueID
+print(leagueID)
 source("api_functions.R")
 # set_per_id(1)
 # set_league(847888)
@@ -35,13 +36,13 @@ Row {data-height=50}
 ### 
 
 ```{r}
-valueBox(value = str_c(unlist(mug$team), collapse = " & "), caption = str_c("Week ", per_id, " Mug (Best Team): ", mug$week_points[1], " Points"), icon = "fa-pencil")
+valueBox(value = str_c(unlist(mug$team), collapse = " & "), caption = str_c("Week ", params$per_id, " Mug (Best Team): ", mug$week_points[1], " Points"), icon = "fa-pencil")
 ```
 
 ### 
 
 ```{r}
-valueBox(value = str_c(unlist(plunger$team), collapse = " & "), caption = str_c("Week ", per_id, " Plunger (Worst Team): ", plunger$week_points[1], " Points"), icon = "fa-pencil")
+valueBox(value = str_c(unlist(plunger$team), collapse = " & "), caption = str_c("Week ", params$per_id, " Plunger (Worst Team): ", plunger$week_points[1], " Points"), icon = "fa-pencil")
 ```
 
 ### 
@@ -143,7 +144,7 @@ out <- lapply(seq_along(plots), function(i){
   
   a1 <- knitr::knit_expand(text = sprintf("### %s\n", plots[[i]]$team)) # tab header, auto extracts names of `plot`
   a2 <- knitr::knit_expand(text = "\n```{r, fig.height=10,fig.width=10}") # start r chunk
-  a3 <- knitr::knit_expand(text = sprintf("\nplots[[%d]]$plot", i)) # extract graphs by "writing" out `hcs[[1]]`, `hcs[[2]]` etc. to be rendered later
+  a3 <- knitr::knit_expand(text = sprintf("\nplots[[%d]]$plot", i)) # extract graphs by "writing" out `plots[[1]]$plot`, `plots[[1]]$plot` etc. to be rendered later
   a4 <- knitr::knit_expand(text = "\n```\n") # end r chunk
 
   paste(a1, a2, a3, a4, collapse = '\n') # collapse together all lines with newline separator
