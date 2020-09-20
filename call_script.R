@@ -1,37 +1,39 @@
 library(tidyverse)
 
+
 leagueID <- list(847888,35354777,89417258,206814)
+names <- list("jim","headshed","OA","Twitter_Guy")
 per_id <- 1
 
-run_reports <- function(leagueID, per_id = 1) {
+run_reports <- function(leagueID, per_id = 1, names) {
   # leagueID=89417258
-  # week=1
+  # per_id=1
   # unlink("ff2020_reports",recursive = T,force = T)
   
-  if(!dir.exists("ff2020_reports")){
-    dir.create("ff2020_reports")
+  if(!dir.exists("03_ff2020_reports")){
+    dir.create("03_ff2020_reports")
   } 
   
   rmarkdown::render("ff2020.Rmd",params=list(
     per_id=per_id, 
     leagueID=leagueID))
 
-  # file.rename(from="ff2020.html", to = paste0("ffdashboard",leagueID,"_",week,".html"))
-  # 
-  # file.copy(from=str_c("ffdashboard",leagueID,"_",week,".html"),
-  #           to=str_c("ff2020_reports/ffdashboard",leagueID,"_",week,".html" ))
-  # 
-  # file.remove(paste0(getwd(),"/","ffdashboard",leagueID,"_",week,".html"))
-  # 
-  # unlink(x = "ff2020_cache*",recursive = T, force = T)
+  file.rename(from="ff2020.html", to = paste0("ffdashboard_",names,"_",per_id,".html"))
+
+  file.copy(from=str_c("ffdashboard_",names,"_",per_id,".html"),
+            to=str_c("03_ff2020_reports/ffdashboard_",names,"_",per_id,".html" ))
+
+  file.remove(paste0(getwd(),"/","ffdashboard_",names,"_",per_id,".html"))
+
+  unlink(x = "ff2020_cache*",recursive = T, force = T)
 
 }
 
-# map2(leagueIDs,rep(week_number,length(leagueIDs)),run_reports)
-leagueID[[1]] %>% 
-purrr::walk(.f = ~run_reports(leagueID = .x,per_id = 1))
+# map2(leagueIDs,rep(per_id_number,length(leagueIDs)),run_reports)
+leagueID %>% 
+purrr::walk2(names,.f = ~run_reports(leagueID = .x,names = .y,per_id = 1))
 
-purrr::map(leagueIDs, ~run_reports(leagueID = .x,week = 1))
-
-run_reports(leagueID = leagueID[1],per_id = 1)
+# purrr::map(leagueID, ~run_reports(leagueID = .x,per_id = 1))
+# 
+# run_reports(leagueID = leagueID[1],per_id = 1)
 

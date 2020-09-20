@@ -1,6 +1,8 @@
 library(tidyverse)
 library(ggrepel)
 
+get_dashboard_data <- function(leagueID = 89417258, per_id = 1){
+
 base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
 year = "2020"
 mid = "/segments/0/leagues/"
@@ -151,7 +153,7 @@ plot_luck_chart <- function(total_standings = total_standings){
   
 }
 
-plot_luck_chart(total_standings = total_standings)
+luck_chart <- plot_luck_chart(total_standings = total_standings)
 
 players_letting_down <-
 team_list %>% 
@@ -385,3 +387,25 @@ team_list %>%
   ggplot(aes(x=projected, y = actual, color = as.factor(eligibleSlots))) +
   geom_point()
 
+all_list <- list(
+  mug = mug, 
+  plunger = plunger, 
+  total_standings = total_standings,
+  luck_chart = luck_chart,
+  biggest_letdown = biggest_letdown,
+  outperformance = outperformance,
+  coach_let_down = coach_let_down,
+  best_coach = best_coach,
+  players_letting_down = players_letting_down,
+  letting_players_down = letting_players_down,
+  plots = plots,
+  player_predictions_hist = player_predictions_hist
+  )
+
+return(all_list)
+
+}
+
+
+
+# dashboard_data <- get_dashboard_data()

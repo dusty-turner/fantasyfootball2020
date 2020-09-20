@@ -23,6 +23,7 @@ per_id <- params$per_id
 leagueID <- params$leagueID
 # print(leagueID)
 source("api_functions.R")
+dashboard_data <- get_dashboard_data(leagueID = leagueID,per_id = per_id)
 # set_per_id(1)
 # set_league(847888)
 ```
@@ -36,13 +37,14 @@ Row {data-height=50}
 ### 
 
 ```{r}
-valueBox(value = str_c(unlist(mug$team), collapse = " & "), caption = str_c("Week ", params$per_id, " Mug (Best Team): ", mug$week_points[1], " Points"), icon = "fa-pencil")
+
+valueBox(value = str_c(unlist(dashboard_data$mug$team), collapse = " & "), caption = str_c("Week ", params$per_id, " Mug (Best Team): ", dashboard_data$mug$week_points[1], " Points"), icon = "fa-pencil")
 ```
 
 ### 
 
 ```{r}
-valueBox(value = str_c(unlist(plunger$team), collapse = " & "), caption = str_c("Week ", params$per_id, " Plunger (Worst Team): ", plunger$week_points[1], " Points"), icon = "fa-pencil")
+valueBox(value = str_c(unlist(dashboard_data$plunger$team), collapse = " & "), caption = str_c("Week ", params$per_id, " Plunger (Worst Team): ", dashboard_data$plunger$week_points[1], " Points"), icon = "fa-pencil")
 ```
 
 ### 
@@ -58,7 +60,7 @@ Row {data-height=350}
 ### 
 
 ```{r}
-total_standings %>% select(-luck) %>% 
+dashboard_data$total_standings %>% select(-luck) %>% 
   mutate(week_win_perc = round(week_win_perc,2)) %>% 
   janitor::clean_names(case = "upper_camel") %>% 
   arrange(-WinPerc,-WeekWinPerc) %>% 
@@ -70,7 +72,7 @@ total_standings %>% select(-luck) %>%
 ### 
 
 ```{r}
-plot_luck_chart(total_standings = total_standings)
+dashboard_data$luck_chart
 ```
 
 Team Performance
@@ -80,37 +82,37 @@ Team Performance
 Row {data-height=70}
 -------------------------------------
 
-### Biggest Team Underperformance: `r str_c(biggest_letdown$team, "\n", biggest_letdown$actual, " out of ", biggest_letdown$projected, " projected points")`
+### Biggest Team Underperformance: `r str_c(dashboard_data$biggest_letdown$team, "\n", dashboard_data$biggest_letdown$actual, " out of ", dashboard_data$biggest_letdown$projected, " projected points")`
 
 ```{r}
-gauge(biggest_letdown$actual %>% round(2), min = 0, max = biggest_letdown$projected %>% round(2), 
-      gaugeSectors(danger = c(0, biggest_letdown$projected))
+gauge(dashboard_data$biggest_letdown$actual %>% round(2), min = 0, max = dashboard_data$biggest_letdown$projected %>% round(2), 
+      gaugeSectors(danger = c(0, dashboard_data$biggest_letdown$projected))
 )
 
 ```
 
-### Biggest Team Overperformance: `r str_c(outperformance$team, "\n", outperformance$actual, " out of ", outperformance$projected, " projected points")`
+### Biggest Team Overperformance: `r str_c(dashboard_data$outperformance$team, "\n", dashboard_data$outperformance$actual, " out of ", dashboard_data$outperformance$projected, " projected points")`
 
 ```{r}
-gauge(outperformance$projected %>% round(2), min = 0, max = outperformance$actual %>% round(2), 
-      gaugeSectors(success = c(0, outperformance$actual))
+gauge(dashboard_data$outperformance$projected %>% round(2), min = 0, max = dashboard_data$outperformance$actual %>% round(2), 
+      gaugeSectors(success = c(0, dashboard_data$outperformance$actual))
 )
 ```
 
-### Worst Coach Award:  `r str_c(coach_let_down$team, "\n", coach_let_down$week_points, " out of ", coach_let_down$best_points, " possible points")`
+### Worst Coach Award:  `r str_c(dashboard_data$coach_let_down$team, "\n", dashboard_data$coach_let_down$week_points, " out of ", dashboard_data$coach_let_down$best_points, " possible points")`
 
 ```{r}
-gauge(coach_let_down$week_points, min = 0, max = coach_let_down$best_points, 
-      gaugeSectors(danger = c(0, coach_let_down$best_points))
+gauge(dashboard_data$coach_let_down$week_points, min = 0, max = dashboard_data$coach_let_down$best_points, 
+      gaugeSectors(danger = c(0, dashboard_data$coach_let_down$best_points))
 )
 
 ```
 
-### Best Coach Award:  `r str_c(best_coach$team, "\n", best_coach$week_points, " out of ", best_coach$best_points, " possible points")`
+### Best Coach Award:  `r str_c(dashboard_data$best_coach$team, "\n", dashboard_data$best_coach$week_points, " out of ", dashboard_data$best_coach$best_points, " possible points")`
 
 ```{r}
-gauge(best_coach$week_points, min = 0, max = best_coach$best_points, 
-      gaugeSectors(success = c(0, best_coach$best_points))
+gauge(dashboard_data$best_coach$week_points, min = 0, max = dashboard_data$best_coach$best_points, 
+      gaugeSectors(success = c(0, dashboard_data$best_coach$best_points))
 )
 
 ```
@@ -122,13 +124,13 @@ Row {data-height=350}
 ### Player Performance
     
 ```{r}
-players_letting_down
+dashboard_data$players_letting_down
 ```
     
 ### Coaching Performance
 
 ```{r}
-letting_players_down
+dashboard_data$letting_players_down
 ```
 
 Team Report
@@ -138,6 +140,7 @@ Row {.tabset .tabset-fade}
 -------------------------------------
 
 ``` {r, echo=FALSE, eval=TRUE}
+plots <- dashboard_data$plots
 # Create a number of tabs and associated plots based on the number of teams in the league.
 out <- lapply(seq_along(plots), function(i){
   
@@ -156,71 +159,10 @@ out <- lapply(seq_along(plots), function(i){
 `r paste(knitr::knit(text = paste(out, collapse = '\n')))`
    
 
-<!-- ### `r plots[[1]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[1]]$plot -->
-<!-- ```    -->
-
-<!-- ### `r plots[[2]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[2]]$plot -->
-<!-- ``` -->
-
-
-<!-- ### `r plots[[3]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[3]]$plot -->
-<!-- ``` -->
-
-
-<!-- ### `r plots[[4]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[4]]$plot -->
-<!-- ``` -->
-
-
-<!-- ### `r plots[[5]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[5]]$plot -->
-<!-- ``` -->
-
-
-<!-- ### `r plots[[6]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[6]]$plot -->
-<!-- ``` -->
-
-
-<!-- ### `r plots[[7]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[7]]$plot -->
-<!-- ``` -->
-
-
-<!-- ### `r plots[[8]]$team` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[8]]$plot -->
-<!-- ``` -->
-
-<!-- ### `r ifelse(number_of_teams>=9,plots[[9]]$team,"")` -->
-
-<!-- ```{r,fig.height=10,fig.width=10} -->
-<!-- plots[[8]]$plot -->
-<!-- ``` -->
-
-
 ESPN Predictions
 ===============================
 
 ```{r}
-player_predictions_hist
+dashboard_data$player_predictions_hist
 ```
 
