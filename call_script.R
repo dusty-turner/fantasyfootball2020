@@ -5,7 +5,7 @@ leagueID <- list(847888,35354777,89417258,206814)
 names <- list("jim","headshed","OA","Twitter_Guy")
 per_id <- 1
 
-run_reports <- function(leagueID, per_id = 1, names) {
+run_reports <- function(leagueID, per_id = 1, names, is_dusty = TRUE) {
   # leagueID=89417258
   # per_id=1
   # unlink("ff2020_reports",recursive = T,force = T)
@@ -26,6 +26,12 @@ run_reports <- function(leagueID, per_id = 1, names) {
   file.remove(paste0(getwd(),"/","ffdashboard_",names,"_",per_id,".html"))
 
   unlink(x = "ff2020_cache*",recursive = T, force = T)
+  
+  if(is_dusty & names %in% c("headshed","OA")){
+    file.copy(from=str_c("03_ff2020_reports/ffdashboard_",names,"_",per_id,".html"),
+              to=str_c("../blog/static/ffdashboard_",names,"_",per_id,".html")
+    )
+  }
 
 }
 
