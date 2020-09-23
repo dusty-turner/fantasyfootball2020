@@ -1,8 +1,10 @@
 library(tidyverse)
 library(ggrepel)
 
-get_dashboard_data <- function(leagueID = 89417258, per_id = 1){
+get_dashboard_data <- function(leagueID = 89417258, per_id = 2){
 
+  
+get_data <- function(leagueID = leagueID, per_id = per_id){
 base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
 year = "2020"
 mid = "/segments/0/leagues/"
@@ -41,15 +43,8 @@ ESPNFromJSON %>% listviewer::jsonedit()
 number_of_teams <- length(ESPNFromJSON$teams$id)
 team_ids <- ESPNFromJSON$teams$id
 
-n_qb <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`0`
-n_rb <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`2`
-n_wr <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`4`
-n_flex <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`23`
-n_te <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`6`
-n_dst <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`16`
-n_k <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`17`
 ## one players stats
-player_extract <- function(team_number = 1, player_number = 1){
+player_extract <- function(team_number = 1, player_number = 1, per_id = per_id){
   player_week <-
     tibble(
       team = str_c(ESPNFromJSON$teams$location[team_number]," ",ESPNFromJSON$teams$nickname[team_number]),
@@ -64,7 +59,8 @@ player_extract <- function(team_number = 1, player_number = 1){
       eligibleSlots = list(ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$eligibleSlots[[player_number]])
     ) %>% 
     filter(seasonId==2020) %>% 
-    filter(scoringPeriodId != 0)
+    filter(scoringPeriodId != 0) %>% 
+    filter(scoringPeriodId == per_id)
   return(player_week)
 }
 
@@ -85,10 +81,50 @@ get_roster_slots <- function(team_number=1){
 
 team_player_slots <- purrr::map_dfr(1:number_of_teams,~get_roster_slots(team_number = .x))
 
-team_list <- purrr::map2_dfr(team_player_slots$team_number,team_player_slots$player_slot, ~player_extract(team_number = .x,player_number = .y)) %>% 
+team_list <- purrr::map2_dfr(team_player_slots$team_number,team_player_slots$player_slot, ~player_extract(team_number = .x,player_number = .y, per_id = per_id)) %>% 
   left_join(schedule) %>% 
   mutate(points_type = if_else(str_length(externalId) > 6, "actual", "projected")) %>% 
   relocate(team:appliedTotal, points_type)
+
+# team_list %>% filter(scoringPeriodId == per_id) %>%   
+
+return(list(team_list = team_list, ESPNFromJSON = ESPNFromJSON))
+
+}
+
+ESPNFromJSON <- get_data(leagueID = leagueID,per_id = 2)[[2]]
+
+
+
+n_qb <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`0`
+n_rb <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`2`
+n_wr <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`4`
+n_flex <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`23`
+n_te <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`6`
+n_dst <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`16`
+n_k <- ESPNFromJSON$setting$rosterSettings$lineupSlotCounts$`17`
+
+
+# team_list %>% filter(team=="Syntax Error") %>% 
+#   filter(points_type=="actual") %>% 
+#   filter(lineupSlot_id!=20) %>% 
+#   filter(scoringPeriodId==1)
+
+team_list <-
+  1:per_id %>% 
+  purrr::map_dfr(~get_data(leagueID = leagueID,per_id = .x)[[1]]) %>% 
+  distinct(teamId,fullName,appliedTotal,scoringPeriodId,.keep_all = T)
+
+team_ids <- unique(team_list$teamId)
+
+# team_list <-
+# get_data(leagueID = leagueID,per_id = 1) %>% 
+#   bind_rows(get_data(leagueID = leagueID,per_id = 2)) %>% 
+#   distinct(teamId,fullName,appliedTotal,scoringPeriodId,.keep_all = T)
+
+# team_list %>% filter(team =="'R'm Chair Quarterback") %>% 
+#   # as.data.frame() %>%
+#   filter(points_type=="actual") %>% arrange(fullName)
 
 # player_slot <- rep(1:roster_size,number_of_teams)
 # team_number <- rep(1:number_of_teams,roster_size) %>% sort()
@@ -98,15 +134,25 @@ team_list <- purrr::map2_dfr(team_player_slots$team_number,team_player_slots$pla
 #   mutate(points_type = if_else(str_length(externalId) > 6, "actual", "projected")) %>% 
 #   relocate(team:appliedTotal, points_type)
 
+# team_list %>% 
+#   filter(lineupSlot_id != 20) %>% filter(lineupSlot_id==21)
+  
+
 schedule_prep <-
-team_list %>% 
-  filter(lineupSlot_id != 20) %>%  # remove bench players
+team_list %>% as.data.frame() %>% 
+  # filter(team %in% c("'R'm Chair Quarterback")) %>%
+  # filter(team %in% c("Palindrome Tikkit")) %>%
+  filter(points_type=="actual")  %>%
+  filter(!lineupSlot_id %in% c(20,21)) %>%  # remove bench players
   filter(scoringPeriodId <= per_id) %>% 
-  group_by(team, scoringPeriodId, points_type)  %>% filter(points_type=="actual")  %>% 
+  group_by(team, scoringPeriodId, points_type)  %>% 
+  # filter(scoringPeriodId==1) %>% 
   summarise(points = sum(appliedTotal), gameId = gameId[1]) %>% 
   arrange(scoringPeriodId,gameId) %>%
   filter(points_type == "actual") %>% 
   group_by(scoringPeriodId,gameId) 
+
+# schedule_prep %>% as.data.frame() %>% arrange(team)
 
 standings <-
 schedule_prep %>% 
@@ -116,6 +162,8 @@ schedule_prep %>%
   mutate(Losses = per_id - Wins) %>% 
   group_by(team) %>% 
   mutate(win_perc = Wins / (Wins + Losses))
+
+# schedule_prep %>% as.data.frame() %>% arrange(scoringPeriodId,points)
 
 week_win_standings <-
 schedule_prep %>% 
@@ -157,6 +205,7 @@ luck_chart <- plot_luck_chart(total_standings = total_standings)
 
 players_letting_down <-
 team_list %>% 
+  filter(scoringPeriodId == per_id) %>% 
   filter(lineupSlot_id != 20) %>% 
   group_by(team, scoringPeriodId, points_type) %>% 
   summarise(points = sum(appliedTotal)) %>% 
@@ -168,7 +217,7 @@ team_list %>%
   geom_hline(aes(yintercept = 0)) +
   scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
   geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
-  labs(title = "Are your players letting you down?",subtitle = "How many more (or less) points did your team score than projected?",
+  labs(title = "Are your players letting you down?",subtitle = str_c("How many more (or less) points did your team score than projected in week ", per_id, "?"),
        x = "Projected Points", y = "Net Points (Actual - Projected)", 
        caption = "Over the line is overperformance.  Under the line is underperformance.") +
   theme(legend.position = "none") +
@@ -240,24 +289,31 @@ team_ids %>%
 
 week_points <-
 team_list %>% 
+  # filter(team == "Syntax Error") %>%
+  # as.data.frame() %>% filter(scoringPeriodId==1) %>%
   filter(lineupSlot_id != 20) %>% 
-  filter(points_type == "actual") %>% 
+  filter(points_type == "actual") %>%
+  # arrange(lineupSlot_id)
   group_by(scoringPeriodId, team) %>% 
   summarise(week_points = sum(appliedTotal))
 
 letting_players_down <-
 best_points %>% 
   left_join(week_points) %>% 
+  filter(scoringPeriodId == per_id) %>% #
   mutate(net_points = best_points - week_points) %>% 
   ggplot(aes(x=week_points, y = net_points, color = net_points)) +
   geom_point() +
   geom_hline(aes(yintercept = 0)) +
   scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
   geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
-  labs(title = "Are you letting your players down?",subtitle = "How many more points could you have scored if you picked your best lineup?",
+  labs(title = "Are you letting your players down?",
+       subtitle = str_c("How many more points could you have scored if you picked your best lineup in week ", per_id, "?"),
        x = "Actual Points", y = "Meat left on the bone (Actual Points - Potential Points)",
        caption = "Higher on the Y Axis: Bad at picking the right players to start \n Higher on the X Axis: Players started scoring more points") +
   theme(legend.position = "none")
+
+# week_points %>% as.data.frame()
 
 mug <-
 week_points %>% 
@@ -355,6 +411,7 @@ plots <- purrr::map(.x = team_ids, .f = ~team_performance(team_no = .x))
 
 player_predictions_hist <-
 team_list %>% 
+  # filter(fullName == "49ers D/ST") %>% 
   unnest(eligibleSlots) %>% 
   filter(eligibleSlots %in% c(2,4,0,6,16,17)) %>% 
   mutate(position = case_when(eligibleSlots == 0 ~ "Quarter Back",
@@ -365,7 +422,9 @@ team_list %>%
                               eligibleSlots == 17 ~ "Kicker",
                               )) %>% 
   select(fullName,appliedTotal,points_type,scoringPeriodId,eligibleSlots, position)  %>% 
-  pivot_wider(names_from = points_type, values_from = appliedTotal) %>% 
+  distinct(fullName,appliedTotal,points_type,scoringPeriodId,eligibleSlots,position) %>% 
+  # group_by(scoringPeriodId,fullName) %>%
+  pivot_wider(names_from = points_type, values_from = appliedTotal)  %>% 
   mutate(overperformance = actual - projected) %>% 
   ggplot(aes(x=overperformance, fill = position)) +
   geom_histogram() +
@@ -378,14 +437,14 @@ team_list %>%
   labs(x = "Actual - Predicted Points",title = "How good are ESPN's Predictions?",caption = "Positive means ESPN underpredicted performance.")
   
 
-team_list %>% 
-  unnest(eligibleSlots) %>% 
-  filter(eligibleSlots %in% c(2,4,0,6,16,17)) %>% 
-  select(fullName,appliedTotal,points_type,scoringPeriodId,eligibleSlots) %>% 
-  pivot_wider(names_from = points_type, values_from = appliedTotal) %>% 
-  mutate(overperformance = actual - projected) %>% 
-  ggplot(aes(x=projected, y = actual, color = as.factor(eligibleSlots))) +
-  geom_point()
+# team_list %>% 
+#   unnest(eligibleSlots) %>% 
+#   filter(eligibleSlots %in% c(2,4,0,6,16,17)) %>% 
+#   select(fullName,appliedTotal,points_type,scoringPeriodId,eligibleSlots) %>% 
+#   pivot_wider(names_from = points_type, values_from = appliedTotal) %>% 
+#   mutate(overperformance = actual - projected) %>% 
+#   ggplot(aes(x=projected, y = actual, color = as.factor(eligibleSlots))) +
+#   geom_point()
 
 all_list <- list(
   mug = mug, 

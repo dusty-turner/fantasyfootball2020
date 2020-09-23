@@ -1,11 +1,13 @@
 library(tidyverse)
 
 
+# leagueID <- list(89417258)
 leagueID <- list(847888,35354777,89417258,206814)
 names <- list("jim","headshed","OA","Twitter_Guy")
-per_id <- 1
+# names <- list("OA")
+per_id <- 2
 
-run_reports <- function(leagueID, per_id = 1, names, is_dusty = TRUE) {
+run_reports <- function(leagueID, per_id = per_id, names, is_dusty = TRUE) {
   # leagueID=89417258
   # per_id=1
   # unlink("ff2020_reports",recursive = T,force = T)
@@ -21,7 +23,7 @@ run_reports <- function(leagueID, per_id = 1, names, is_dusty = TRUE) {
   file.rename(from="ff2020.html", to = paste0("ffdashboard_",names,"_",per_id,".html"))
 
   file.copy(from=str_c("ffdashboard_",names,"_",per_id,".html"),
-            to=str_c("03_ff2020_reports/ffdashboard_",names,"_",per_id,".html" ))
+            to=str_c("03_ff2020_reports/ffdashboard_",names,"_",per_id,".html" ),overwrite = T)
 
   file.remove(paste0(getwd(),"/","ffdashboard_",names,"_",per_id,".html"))
 
@@ -37,7 +39,7 @@ run_reports <- function(leagueID, per_id = 1, names, is_dusty = TRUE) {
 
 # map2(leagueIDs,rep(per_id_number,length(leagueIDs)),run_reports)
 leagueID %>% 
-purrr::walk2(names,.f = ~run_reports(leagueID = .x,names = .y,per_id = 1))
+purrr::walk2(names,.f = ~run_reports(leagueID = .x,names = .y,per_id = per_id))
 
 # purrr::map(leagueID, ~run_reports(leagueID = .x,per_id = 1))
 # 
