@@ -7,7 +7,7 @@ names <- list("jim","headshed","OA","Twitter_Guy")
 is_dusty = TRUE
 per_id <- 2
 
-run_reports <- function(leagueID, per_id = per_id, names, is_dusty = TRUE) {
+run_reports <- function(leagueID, per_id = per_id, names) {
   # leagueID=89417258
   # per_id=1
   # unlink("ff2020_reports",recursive = T,force = T)
@@ -29,7 +29,8 @@ run_reports <- function(leagueID, per_id = per_id, names, is_dusty = TRUE) {
 
   unlink(x = "ff2020_cache*",recursive = T, force = T)
   
-  if(is_dusty & names %in% c("headshed","OA")){
+  
+  if(Sys.info()[[6]]=="dusty.s.turner" & names %in% c("headshed","OA")){
     file.copy(from=str_c("03_ff2020_reports/ffdashboard_",names,"_",per_id,".html"),
               to=str_c("../blog/static/ffdashboard_",names,"_",per_id,".html")
     )
@@ -37,14 +38,19 @@ run_reports <- function(leagueID, per_id = per_id, names, is_dusty = TRUE) {
     # getwd()
     blogdown::serve_site()
     blogdown::stop_server()
-    setwd("../fantasyfootball2020/")
-    # source("09_personal/shell1.sh")
+    # setwd("../fantasyfootball2020/")
+    # system("cd ../blog")
+    # system("git status")
+    shell(str_c(getwd(),"/09_personal/shell1.sh"))
+    
+    # system("bash -l", input = str_c(getwd(),"/09_personal/shell1.sh"))
     # shell(cmd = "cd ../blog", shell = "git status")
     # shell(cmd = "git status", shell = "git")
 
   }
 
 }
+
 
 # map2(leagueIDs,rep(per_id_number,length(leagueIDs)),run_reports)
 leagueID %>% 
