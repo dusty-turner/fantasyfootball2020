@@ -4,6 +4,7 @@ library(tidyverse)
 leagueID <- list(847888,35354777,89417258,206814)
 names <- list("jim","headshed","OA","Twitter_Guy")
 per_id <- 1
+is_dusty = TRUE
 
 run_reports <- function(leagueID, per_id = 1, names, is_dusty = TRUE) {
   # leagueID=89417258
@@ -31,6 +32,15 @@ run_reports <- function(leagueID, per_id = 1, names, is_dusty = TRUE) {
     file.copy(from=str_c("03_ff2020_reports/ffdashboard_",names,"_",per_id,".html"),
               to=str_c("../blog/static/ffdashboard_",names,"_",per_id,".html")
     )
+    setwd("../blog")
+    # getwd()
+    blogdown::serve_site()
+    blogdown::stop_server()
+    setwd("../fantasyfootball2020/")
+    # source("09_personal/shell1.sh")
+    # shell(cmd = "cd ../blog", shell = "git status")
+    # shell(cmd = "git status", shell = "git")
+
   }
 
 }
