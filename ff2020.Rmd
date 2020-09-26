@@ -48,8 +48,27 @@ valueBox(value = str_c(unlist(dashboard_data$plunger$team[per_id]), collapse = "
 
 ### 
 
+```{r include=FALSE}
+total_mug <-str_c(unlist(t(dashboard_data$mugtally %>% mutate(n = str_c(n,"<br>")))),collapse = " ")
+```
+
+
 ```{r}
-valueBox(value = "Plunger / Mug Tally", caption = "Future Home Of",icon = "fa-pencil")
+valueBox(value = "Mug Tally",
+         caption = total_mug,
+         icon = "fa-pencil")
+
+```
+
+###
+
+```{r include=FALSE}
+total_plunger <-str_c(unlist(t(dashboard_data$plungertally %>% mutate(n = str_c(n,"<br>")))),collapse = " ")
+```
+
+
+```{r}
+valueBox(value = "Plunger Tally", caption = total_plunger,icon = "fa-pencil")
 
 ```
 
@@ -78,7 +97,7 @@ Team Performance
 ===============================
 
 
-Row {data-height=70}
+Row {data-height=90}
 -------------------------------------
 
 ### Biggest Team Underperformance: `r str_c(dashboard_data$biggest_letdown$team[per_id], "\n", dashboard_data$biggest_letdown$actual[per_id], " out of ", dashboard_data$biggest_letdown$projected[per_id], " projected points")`
@@ -117,19 +136,34 @@ gauge(dashboard_data$best_coach$week_points[per_id], min = 0, max = dashboard_da
 ```
 
 
-Row {data-height=350}
+Row {data-height=300}
 -------------------------------------
     
-### Player Performance
+### Player Performance Week `r per_id`
     
 ```{r}
-dashboard_data$players_letting_down
+dashboard_data$players_letting_down_week
 ```
     
-### Coaching Performance
+### Coaching Performance Week `r per_id`
 
 ```{r}
 dashboard_data$letting_players_down
+```
+
+Row {data-height=300}
+-------------------------------------
+    
+### Player Performance Season
+    
+```{r}
+dashboard_data$players_letting_down_overall
+```
+    
+### Coaching Performance Season
+
+```{r}
+dashboard_data$letting_players_down_week
 ```
 
 Team Report

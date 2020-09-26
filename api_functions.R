@@ -203,7 +203,7 @@ plot_luck_chart <- function(total_standings = total_standings){
 
 luck_chart <- plot_luck_chart(total_standings = total_standings)
 
-players_letting_down <-
+players_letting_down_week <-
 team_list %>% 
   filter(scoringPeriodId == per_id) %>% 
   filter(lineupSlot_id != 20) %>% 
@@ -218,6 +218,27 @@ team_list %>%
   scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
   geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
   labs(title = "Are your players letting you down?",subtitle = str_c("How many more (or less) points did your team score than projected in week ", per_id, "?"),
+       x = "Projected Points", y = "Net Points (Actual - Projected)", 
+       caption = "Over the line is overperformance.  Under the line is underperformance.") +
+  theme(legend.position = "none") +
+  ylim(-50,50)
+
+players_letting_down_overall <-
+team_list %>%  
+  # filter(scoringPeriodId == per_id) %>%
+  filter(lineupSlot_id != 20) %>% 
+  group_by(team, points_type) %>% 
+  # group_by(team, scoringPeriodId, points_type) %>% 
+  summarise(points = sum(appliedTotal)) %>% as.data.frame() %>%
+  # mutate(this_week = scoringPeriodId == per_id) %>% 
+  pivot_wider(names_from = points_type,values_from = points) %>% 
+  mutate(net_points = actual - projected) %>% 
+  ggplot(aes(x=projected, y = net_points, color = net_points)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0)) +
+  scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
+  geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
+  labs(title = "Are your players letting you down?",subtitle = str_c("How many more (or less) points did your team score over the season?"),
        x = "Projected Points", y = "Net Points (Actual - Projected)", 
        caption = "Over the line is overperformance.  Under the line is underperformance.") +
   theme(legend.position = "none") +
@@ -287,6 +308,12 @@ team_ids %>%
   group_by(scoringPeriodId, team) %>% 
   summarise(best_points = sum(appliedTotal))
 
+best_points_season <-
+team_ids %>% 
+  map_dfr(~best_roster(team_num = .x)) %>% 
+  group_by(team) %>% 
+  summarise(best_points = sum(appliedTotal))
+
 week_points <-
 team_list %>% 
   # filter(team == "Syntax Error") %>%
@@ -297,10 +324,38 @@ team_list %>%
   group_by(scoringPeriodId, team) %>% 
   summarise(week_points = sum(appliedTotal))
 
-letting_players_down <-
+total_points <-
+team_list %>% 
+  # filter(team == "Syntax Error") %>%
+  # as.data.frame() %>% filter(scoringPeriodId==1) %>%
+  filter(lineupSlot_id != 20) %>% 
+  filter(points_type == "actual") %>%
+  # arrange(lineupSlot_id)
+  group_by(team) %>% 
+  summarise(week_points = sum(appliedTotal))
+
+letting_players_down_week <-
 best_points %>% 
   left_join(week_points) %>% 
   filter(scoringPeriodId == per_id) %>% #
+  mutate(net_points = best_points - week_points) %>% 
+  ggplot(aes(x=week_points, y = net_points, color = net_points)) +
+  geom_point() +
+  geom_hline(aes(yintercept = 0)) +
+  scale_color_gradient2(low = "red",mid = "grey" ,high = "green",midpoint = 0) +
+  geom_label_repel(aes(label = str_c(team)), color = "Black",max.iter = 10000) +
+  labs(title = "Are you letting your players down?",
+       subtitle = str_c("How many more points could you have scored if you picked your best lineup in week ", per_id, "?"),
+  # labs(title = "Are you letting your players down?",
+  #      subtitle = str_c("How many more points could you have scored if you picked your best lineup in week ", per_id, "?"),
+       x = "Actual Points", y = "Meat left on the bone (Actual Points - Potential Points)",
+       caption = "Higher on the Y Axis: Bad at picking the right players to start \n Higher on the X Axis: Players started scoring more points") +
+  theme(legend.position = "none")
+
+letting_players_down_season <-
+best_points_season %>% 
+  left_join(total_points) %>% 
+  # filter(scoringPeriodId == per_id) %>% #
   mutate(net_points = best_points - week_points) %>% 
   ggplot(aes(x=week_points, y = net_points, color = net_points)) +
   geom_point() +
@@ -319,9 +374,20 @@ mug <-
 week_points %>% 
   filter(week_points == max(week_points))
 
+mugtally <-
+  mug %>% 
+  ungroup() %>% 
+  count(team)
+
 plunger <-
 week_points %>% 
   filter(week_points == min(week_points))
+
+plungertally <-
+  plunger %>% 
+  ungroup() %>% 
+  count(team) 
+
 
 coach_let_down <-
   best_points %>% 
@@ -389,7 +455,7 @@ data %>%
         axis.title.y = element_blank(),
         legend.position = "none") +
         # strip.text = element_text(size = 3)) +
-  labs(x = "Points", title = str_c("How well each player on ", team_name, " performed.") ,subtitle = "Big dots represent projected score.  Small dots represent actual score",
+  labs(x = "Points", title = str_c("How well each player on ", team_name, " performed.") ,subtitle = "Big dots represent projected score.  Small dots represent actual score.",
       caption = "Arranged by projected score")
 
   plot
@@ -434,7 +500,7 @@ team_list %>%
         axis.ticks.y = element_blank(),
         axis.text.y = element_blank(),
         axis.title.y = element_blank()) +
-  labs(x = "Actual - Predicted Points",title = "How good are ESPN's Predictions?",caption = "Positive means ESPN underpredicted performance.")
+  labs(x = "Actual - Predicted Points",title = "How Good Are ESPN's Predictions?",caption = "Positive Means ESPN Underpredicted Performance.")
   
 
 # team_list %>% 
@@ -455,10 +521,13 @@ all_list <- list(
   outperformance = outperformance,
   coach_let_down = coach_let_down,
   best_coach = best_coach,
-  players_letting_down = players_letting_down,
-  letting_players_down = letting_players_down,
+  players_letting_down_week = players_letting_down_week,
+  players_letting_down_overall = players_letting_down_overall,
+  letting_players_down_week = letting_players_down_week,
   plots = plots,
-  player_predictions_hist = player_predictions_hist
+  player_predictions_hist = player_predictions_hist,
+  mugtally = mugtally,
+  plungertally = plungertally
   )
 
 return(all_list)

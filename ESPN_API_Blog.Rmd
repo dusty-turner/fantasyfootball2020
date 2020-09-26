@@ -1,0 +1,185 @@
+---
+title: "ESPN Fantasy Football API 2020 Part 1"
+author: "Dusty Turner"
+date: "9/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning = F,message = F)
+```
+
+## Its that time of year!
+
+Its that time of year again.  The time when we dust off the old ESPN fantasy football API code and fix everything that's broken in the last year.  
+
+Here's what I hope to show over the next few posts.
+
+1. How to access your ESPN public fantasy football league's data.
+2. How to organize that data and create a few interesting displays.
+3. How to create a dashboard to supplement your league's fun.
+
+## A little background
+
+This ESPN API exploration is a fun annual process.  I first started doing this in [2018](https://www.dustysturner.com/post/espn-yahoo-api-navigation/).  In 2019, after some hacking and some updates, I posted about how to access [public leagues](https://www.dustysturner.com/post/espn-fantasy-football-v3-api-an-r-solution/), how to access [private leagues using reticulate and python](https://www.dustysturner.com/post/espn-fantasy-football-v3-api-for-private-leagues-python-through-r/), and how to access [private leagues in R](https://www.dustysturner.com/post/espn-fantasy-football-v3-api-for-private-leagues-an-r-solution-finally/).  I went so far last year as to [build a dashboard](https://www.dustysturner.com/post/fantasy-football-2019-analysis/) with the data to further analyze my league.
+
+Well, in 2020, ESPN changed their some of their end points.  After a lot of exploration and the help of Chrome's inspect tool, I present code to access ESPN's API.  This *should* work for any league.  If you find it does not work for your league, I'd be happy to take a pull request or two to handle more nuances.
+
+## How to access the API
+
+In the function below, you provide arguments for your leagueID and the week of the information you would like to extract.
+
+To find your leagueID, look at the URL of your fantasy football home page.
+
+The output of this function will be a JSON file.  I provide code to explore the JSON file as well.  
+
+```{r}
+library(tidyverse)
+library(gt)
+
+get_data <- function(leagueID = leagueID, per_id = per_id){
+base = "http://fantasy.espn.com/apis/v3/games/ffl/seasons/"
+year = "2020"
+mid = "/segments/0/leagues/"
+tail = str_c("?view=mDraftDetail",
+             "&view=mLiveScoring",
+             "&view=mMatchupScore,",
+             "&view=mPendingTransactions",
+             "&view=mPositionalRatings",
+             "&view=mRoster",
+             "&view=mSettings",
+             "&view=mTeam",
+             "&view=modular",
+             "&view=mNav",
+             "&view=mMatchupScore",
+             "&scoringPeriodId="
+             )
+
+url = paste0(base,year,mid,leagueID,tail,per_id)
+
+ESPNGet <- httr::GET(url = url)
+ESPNRaw <- rawToChar(ESPNGet$content)
+ESPNFromJSON <- jsonlite::fromJSON(ESPNRaw)
+
+return(ESPNFromJSON)
+
+}
+
+leagueID <- 89417258
+per_id <- 2
+
+ESPNFromJSON <- get_data(leagueID = leagueID, per_id = per_id)
+
+ESPNFromJSON %>% listviewer::jsonedit()
+```
+
+## What can we do with this data?
+
+I'm glad you asked.  In subsequent posts, I'll provide more examples, but here are a few quick examples.
+
+### Extract one players information
+
+```{r}
+
+number_of_teams <- length(ESPNFromJSON$teams$id)
+team_ids <- ESPNFromJSON$teams$id
+
+player_extract <- function(team_number = 1, player_number = 1, per_id = per_id, ESPNFromJSON = ESPNFromJSON){
+  player_week <-
+    tibble(
+      team = str_c(ESPNFromJSON$teams$location[team_number]," ",ESPNFromJSON$teams$nickname[team_number]),
+      teamId = ESPNFromJSON$teams$id[team_number],
+      fullName = ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$fullName[player_number],
+      appliedTotal = ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats[[player_number]]$appliedTotal,
+      seasonId = ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats[[player_number]]$seasonId,
+      scoringPeriodId = ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats[[player_number]]$scoringPeriodId,
+      statsplitTypeId = ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats[[player_number]]$statSplitTypeId,
+      externalId = ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats[[player_number]]$externalId,
+      lineupSlot_id = ESPNFromJSON$teams$roster$entries[[team_number]]$lineupSlotId[player_number],
+      eligibleSlots = list(ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$eligibleSlots[[player_number]])
+    ) %>%
+    filter(seasonId==2020) %>%
+    filter(scoringPeriodId != 0) %>%
+    filter(scoringPeriodId == per_id)
+  return(player_week)
+}
+
+player_extract(ESPNFromJSON = ESPNFromJSON,team_number = 1,player_number = 1,per_id = per_id) %>% gt()
+```
+
+### Get all players from all teams
+
+To extract the players for each team, we first need to know how many players are on each team each week.  One might think this is consistent, but with an IR slot, this may change from week to week.
+
+First we create a function to determine how many roster spots are on a given team.
+
+```{r}
+get_roster_slots <- function(team_number=1){
+  return(tibble(team_number = team_number, player_slot = 1:length(ESPNFromJSON$teams$roster$entries[[team_number]]$playerPoolEntry$player$stats)))
+}
+```
+
+Then we map that over all teams.
+
+```{r}
+team_player_slots <- purrr::map_dfr(1:number_of_teams,~get_roster_slots(team_number = .x))
+
+team_player_slots
+```
+
+Now, we map the team_number and player_slots data to the player_extract function to get every player from every team. 
+
+```{r}
+team_list <- purrr::map2_dfr(team_player_slots$team_number,team_player_slots$player_slot, ~player_extract(ESPNFromJSON = ESPNFromJSON,team_number = .x,player_number = .y, per_id = per_id)) 
+
+team_list %>% 
+  group_by(teamId) %>% 
+  slice_head(1) %>% 
+  ungroup() %>% 
+  gt() %>% 
+  tab_header("First player on each team")
+```
+
+To get some really good information, we need to join this to the teams and their weekly schedule.
+
+So lets extract the schedule....
+
+```{r}
+schedule <-
+  tibble(
+    home = ESPNFromJSON$schedule$away$teamId,
+    away = ESPNFromJSON$schedule$home$teamId,
+    scoringPeriodId = ESPNFromJSON$schedule$matchupPeriodId,
+    gameId = ESPNFromJSON$schedule$id
+  ) %>%
+  pivot_longer(cols = c(home,away), values_to = "teamId")
+```
+
+Then join the players and schedule.
+
+```{r}
+team_list <-
+team_list %>% 
+  left_join(schedule) %>%
+  mutate(points_type = if_else(str_length(externalId) > 6, "actual", "projected")) %>%
+  relocate(team:appliedTotal, points_type)
+
+team_list %>% 
+  group_by(teamId) %>% 
+  slice_head(1) %>% 
+  ungroup() %>% 
+  gt() %>% 
+  tab_header("First player on each team")
+```
+
+Now, we can really start analyzing our league!  But that's for the next post!
+
+## Help requested!
+
+Everything listed below is at my [github repo](https://github.com/dusty-turner/fantasyfootball2020).  
+
+If you are the time/talent/background to help turn this into an R package, I'd love to learn from you and invite you to make some pull requests!
+
+## Special Thanks
+
+A special thanks to my friend and collaborator Jim Pleuss.  This code would not be what it is if not for him. 

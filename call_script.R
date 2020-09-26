@@ -2,13 +2,12 @@ library(tidyverse)
 
 
 # leagueID <- list(847888)
+# names <- list("jim")
 leagueID <- list(847888,35354777,89417258,206814)
 names <- list("jim","headshed","OA","Twitter_Guy")
-# names <- list("jim")
-is_dusty = TRUE
 per_id <- 2
 
-run_reports <- function(leagueID, per_id = per_id, names, is_dusty = TRUE) {
+run_reports <- function(leagueID, per_id = per_id, names) {
   # leagueID=89417258
   # per_id=1
   # unlink("ff2020_reports",recursive = T,force = T)
@@ -30,7 +29,7 @@ run_reports <- function(leagueID, per_id = per_id, names, is_dusty = TRUE) {
 
   unlink(x = "ff2020_cache*",recursive = T, force = T)
   
-  if(is_dusty & names %in% c("headshed","OA","jim")){
+  if(Sys.info()[[6]]=="turne" & names %in% c("headshed","OA","jim")){
     file.copy(from=str_c("03_ff2020_reports/ffdashboard_",names,"_",per_id,".html"),
               to=str_c("../blog/static/ff2020/ffdashboard_",names,"_",per_id,".html"),
               overwrite = TRUE
@@ -40,10 +39,13 @@ run_reports <- function(leagueID, per_id = per_id, names, is_dusty = TRUE) {
     blogdown::stop_server()
     setwd("../fantasyfootball2020/")
     shell("C:/Users/turne/Desktop/Dustys_Files/R_Work/fantasyfootball2020/09_personal/shell1.sh")
+    # shell(str_c(getwd(),"/09_personal/shell1.sh"))
+    
 
   }
 
 }
+
 
 # map2(leagueIDs,rep(per_id_number,length(leagueIDs)),run_reports)
 leagueID %>% 
