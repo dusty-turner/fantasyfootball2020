@@ -5,8 +5,8 @@ output:
     orientation: rows
     vertical_layout: fill
 params: 
-  per_id: 2
-  leagueID: 89417258
+  per_id: 5
+  leagueID: 847888
 ---
 
 ```{r setup, include=FALSE, cache=F}
@@ -103,7 +103,7 @@ Row {data-height=90}
 ### Biggest Team Underperformance: `r str_c(dashboard_data$biggest_letdown$team[per_id], "\n", dashboard_data$biggest_letdown$actual[per_id], " out of ", dashboard_data$biggest_letdown$projected[per_id], " projected points")`
 
 ```{r}
-gauge(dashboard_data$biggest_letdown$actual[per_id] %>% round(2), min = 0, max = dashboard_data$biggest_letdown$projected[per_id] %>% round(2), 
+gauge(dashboard_data$biggest_letdown$actual[per_id] %>% round(2), min = 0, max = dashboard_data$biggest_letdown$projected[per_id] %>% round(2),
       gaugeSectors(danger = c(0, dashboard_data$biggest_letdown$projected[per_id]))
 )
 
