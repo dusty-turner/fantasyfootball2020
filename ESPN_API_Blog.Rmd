@@ -11,13 +11,19 @@ knitr::opts_chunk$set(echo = TRUE,warning = F,message = F)
 
 ## Its that time of year!
 
-Its that time of year again.  The time when we dust off the old ESPN fantasy football API code and fix everything that's broken in the last year.  
+Its that time of year again.  The time when we dust off the old ESPN fantasy football API R code and fix everything that broke in the last year.  
 
 Here's what I hope to show over the next few posts.
 
 1. How to access your ESPN public fantasy football league's data.
 2. How to organize that data and create a few interesting displays.
 3. How to create a dashboard to supplement your league's fun.
+
+My ultimate goal is to build this into a package on Github.  I've got that started, but its currently a work in progress.  
+
+All this code and more is located at my [github](https://github.com/dusty-turner/fantasyfootball2020)
+
+And a special thanks to my friend and collaborator [Jim Pleuss](https://www.linkedin.com/in/jim-pleuss-0a10bb81/) who really enhanced so much of this project!
 
 ## A little background
 
@@ -29,7 +35,7 @@ Well, in 2020, ESPN changed their some of their end points.  After a lot of expl
 
 In the function below, you provide arguments for your leagueID and the week of the information you would like to extract.
 
-To find your leagueID, look at the URL of your fantasy football home page.
+To find your leagueID, look at the URL of your fantasy football home page on ESPN.
 
 The output of this function will be a JSON file.  I provide code to explore the JSON file as well.  
 
@@ -69,15 +75,19 @@ leagueID <- 89417258
 per_id <- 2
 
 ESPNFromJSON <- get_data(leagueID = leagueID, per_id = per_id)
+```
 
+We'll can explore the data using the `listviewer` package. You can peruse the data from this JSON below.
+
+```{r}
 ESPNFromJSON %>% listviewer::jsonedit()
 ```
 
 ## What can we do with this data?
 
-I'm glad you asked.  In subsequent posts, I'll provide more examples, but here are a few quick examples.
+I'm glad you asked.  In subsequent posts, I'll provide more examples, but here are a few quick things:
 
-### Extract one players information
+### Extract one player's information
 
 ```{r}
 
@@ -127,10 +137,20 @@ team_player_slots <- purrr::map_dfr(1:number_of_teams,~get_roster_slots(team_num
 team_player_slots
 ```
 
-Now, we map the team_number and player_slots data to the player_extract function to get every player from every team. 
+Now, we map the `team_number` and `player_slots` data to the `player_extract()` function to get every player from every team. 
 
 ```{r}
-team_list <- purrr::map2_dfr(team_player_slots$team_number,team_player_slots$player_slot, ~player_extract(ESPNFromJSON = ESPNFromJSON,team_number = .x,player_number = .y, per_id = per_id)) 
+team_list <- 
+  purrr::map2_dfr(
+    team_player_slots$team_number,
+    team_player_slots$player_slot, 
+    ~player_extract(
+      ESPNFromJSON = ESPNFromJSON,
+      team_number = .x,
+      player_number = .y, 
+      per_id = per_id
+      )
+    )
 
 team_list %>% 
   group_by(teamId) %>% 
@@ -173,13 +193,3 @@ team_list %>%
 ```
 
 Now, we can really start analyzing our league!  But that's for the next post!
-
-## Help requested!
-
-Everything listed below is at my [github repo](https://github.com/dusty-turner/fantasyfootball2020).  
-
-If you are the time/talent/background to help turn this into an R package, I'd love to learn from you and invite you to make some pull requests!
-
-## Special Thanks
-
-A special thanks to my friend and collaborator Jim Pleuss.  This code would not be what it is if not for him. 

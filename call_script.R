@@ -1,11 +1,11 @@
 library(tidyverse)
 
 
-# leagueID <- list(847888)
-# names <- list("jim")
+# leagueID <- list(89417258)
+# names <- list("OA")
 leagueID <- list(847888,35354777,89417258,206814)
 names <- list("jim","headshed","OA","Twitter_Guy")
-per_id <- 2
+per_id <- 5
 
 run_reports <- function(leagueID, per_id = per_id, names) {
   # leagueID=89417258
