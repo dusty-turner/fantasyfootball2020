@@ -1,8 +1,8 @@
 library(tidyverse)
 library(ggrepel)
 
-# leagueID <- 89417258
-# per_id <- 4
+leagueID <- 847888
+per_id <- 5
 
 get_dashboard_data <- function(leagueID = 89417258, per_id = per_id){
 
@@ -221,7 +221,7 @@ luck_chart <- plot_luck_chart(total_standings = total_standings)
 players_letting_down_week <-
 team_list %>% 
   dplyr::filter(scoringPeriodId == per_id) %>% 
-  dplyr::filter(lineupSlot_id != 20) %>% 
+  dplyr::filter(!lineupSlot_id %in% c(20,21)) %>% 
   dplyr::group_by(team, scoringPeriodId, points_type) %>% 
   dplyr::summarise(points = sum(appliedTotal)) %>% 
   dplyr::mutate(this_week = scoringPeriodId == per_id) %>% 
@@ -241,7 +241,7 @@ team_list %>%
 players_letting_down_overall <-
 team_list %>%  
   # dplyr::filter(scoringPeriodId == per_id) %>%
-  dplyr::filter(lineupSlot_id != 20) %>% 
+  dplyr::filter(!lineupSlot_id %in% c(20,21)) %>% 
   dplyr::group_by(team, points_type) %>% 
   # dplyr::group_by(team, scoringPeriodId, points_type) %>% 
   dplyr::summarise(points = sum(appliedTotal)) %>% as.data.frame() %>%
@@ -333,7 +333,7 @@ week_points <-
 team_list %>% 
   # dplyr::filter(team == "Syntax Error") %>%
   # as.data.frame() %>% dplyr::filter(scoringPeriodId==1) %>%
-  dplyr::filter(lineupSlot_id != 20) %>% 
+  dplyr::filter(!lineupSlot_id %in% c(20,21)) %>% 
   dplyr::filter(points_type == "actual") %>%
   # dplyr::arrange(lineupSlot_id)
   dplyr::group_by(scoringPeriodId, team) %>% 
@@ -343,7 +343,7 @@ total_points <-
 team_list %>% 
   # dplyr::filter(team == "Syntax Error") %>%
   # as.data.frame() %>% dplyr::filter(scoringPeriodId==1) %>%
-  dplyr::filter(lineupSlot_id != 20) %>% 
+  dplyr::filter(!lineupSlot_id %in% c(20,21)) %>% 
   dplyr::filter(points_type == "actual") %>%
   # dplyr::arrange(lineupSlot_id)
   dplyr::group_by(team) %>% 
@@ -420,7 +420,7 @@ best_coach <-
 
 biggest_letdown <-
 team_list %>% 
-  dplyr::filter(lineupSlot_id != 20) %>% 
+  dplyr::filter(!lineupSlot_id %in% c(20,21)) %>% 
   dplyr::group_by(team, scoringPeriodId, points_type) %>% 
   dplyr::summarise(points = sum(appliedTotal)) %>% 
   dplyr::mutate(this_week = scoringPeriodId == per_id) %>% 
@@ -428,12 +428,12 @@ team_list %>%
   dplyr::mutate(net_points = actual - projected) %>% 
   dplyr::arrange(net_points) %>% 
   dplyr::group_by(scoringPeriodId) %>% 
-  slice_min(net_points,1) %>% 
+  slice_min(net_points,n=1) %>% 
   dplyr::mutate(projected = round(projected,2))
 
 outperformance <-
 team_list %>% 
-  dplyr::filter(lineupSlot_id != 20) %>% 
+  dplyr::filter(!lineupSlot_id %in% c(20,21)) %>% 
   dplyr::group_by(team, scoringPeriodId, points_type) %>% 
   dplyr::summarise(points = sum(appliedTotal)) %>% 
   dplyr::mutate(this_week = scoringPeriodId == per_id) %>% 
@@ -441,13 +441,17 @@ team_list %>%
   dplyr::mutate(net_points = actual - projected, projected = round(projected,2)) %>% 
   dplyr::arrange(net_points) %>% 
   dplyr::group_by(scoringPeriodId) %>% 
-  slice_max(net_points,1)
+  slice_max(net_points,n=1)
 
 
 
 team_performance <- function(data = team_list, per_id_now = per_id, team_no = 5){
   
-  team_name <- data %>% dplyr::filter(teamId == team_no) %>% slice_head(1) %>% select(team) %>% pull
+  # data = team_list
+  # per_id_now = per_id
+  # team_no = 5
+  
+  team_name <- data %>% dplyr::filter(teamId == team_no) %>% slice_head(n=1) %>% select(team) %>% pull
   
   plot <-
 data %>% 
@@ -480,7 +484,7 @@ return(list(team = team_name, plot = plot))
 }
 
 plots <- purrr::map(.x = team_ids, .f = ~team_performance(team_no = .x))
-
+ # team_performance(team_no=2)
 
 # 2 rb
 # 4 wr
