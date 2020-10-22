@@ -25,6 +25,9 @@ run_reports <- function(leagueID, per_id = per_id, names) {
   file.copy(from=str_c("ffdashboard_",names,"_",per_id,".html"),
             to=str_c("03_ff2020_reports/ffdashboard_",names,"_",per_id,".html" ),overwrite = T)
 
+  file.copy(from=str_c("ffdashboard_",names,"_",per_id,".html"),
+            to=str_c("03_ff2020_reports/ffdashboard_",names,"_current.html" ),overwrite = T)
+
   file.remove(paste0(getwd(),"/","ffdashboard_",names,"_",per_id,".html"))
 
   unlink(x = "ff2020_cache*",recursive = T, force = T)
