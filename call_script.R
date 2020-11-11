@@ -5,11 +5,11 @@ library(tidyverse)
 # names <- list("OA")
 leagueID <- list(847888,35354777,89417258,206814)
 names <- list("jim","headshed","OA","Twitter_Guy")
-per_id <- 5
+per_id <- 9
 
 run_reports <- function(leagueID, per_id = per_id, names) {
-  # leagueID=89417258
-  # per_id=1
+  # leagueID=847888
+  # per_id=9
   # unlink("ff2020_reports",recursive = T,force = T)
   
   if(!dir.exists("03_ff2020_reports")){

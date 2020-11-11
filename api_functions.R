@@ -1,8 +1,8 @@
 library(tidyverse)
 library(ggrepel)
 
-leagueID <- 847888
-per_id <- 5
+# leagueID <- 847888
+# per_id <- 9
 
 get_dashboard_data <- function(leagueID = 89417258, per_id = per_id){
 
@@ -167,7 +167,6 @@ team_list %>%
   dplyr::group_by(scoringPeriodId,gameId) 
 
 # schedule_prep %>% as.data.frame() %>% dplyr::arrange(team)
-
 standings <-
 schedule_prep %>% 
   dplyr::mutate(Win_week = points==max(points)) %>% 
@@ -177,8 +176,7 @@ schedule_prep %>%
   dplyr::group_by(team) %>% 
   dplyr::mutate(win_perc = Wins / (Wins + Losses))
 
-# schedule_prep %>% as.data.frame() %>% dplyr::arrange(scoringPeriodId,points)
-
+# schedule_prep %>% as.data.frame() %>% dplyr::arrange(scoringPeriodId,points
 week_win_standings <-
 schedule_prep %>% 
   dplyr::group_by(scoringPeriodId) %>% 
@@ -188,9 +186,18 @@ schedule_prep %>%
   dplyr::summarise(week_wins = sum(week_wins), week_losses = sum(week_losses)) %>% 
   dplyr::mutate(week_win_perc = week_wins / (week_wins + week_losses))
 
+three_game_ave <-
+  schedule_prep %>% 
+  dplyr::select(team,scoringPeriodId,points) %>% 
+  dplyr::filter(scoringPeriodId>(per_id-3)) %>%
+  dplyr::group_by(team) %>% 
+  dplyr::summarise(last_three=round(mean(points),1))
+                  
+
 total_standings <-
   standings %>% 
   left_join(week_win_standings) %>% 
+  left_join(three_game_ave) %>% 
   relocate(contains("perc"), .after = last_col()) %>% 
   dplyr::ungroup() %>% 
   dplyr::mutate(luck = (-win_perc + week_win_perc)/sqrt(2)) %>% 

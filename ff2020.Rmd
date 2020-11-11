@@ -21,6 +21,8 @@ knitr::opts_chunk$set(cache = F)
 ```{r,cache=F}
 per_id <- params$per_id
 leagueID <- params$leagueID
+# per_id <- 9
+# leagueID <- 847888
 # print(leagueID)
 source("api_functions.R")
 dashboard_data <- get_dashboard_data(leagueID = leagueID,per_id = per_id)
@@ -37,13 +39,13 @@ Row {data-height=50}
 ### 
 
 ```{r}
-valueBox(value = str_c(unlist(dashboard_data$mug$team[per_id]), collapse = " & "), caption = str_c("Week ", params$per_id, " Mug (Best Team): ", dashboard_data$mug$week_points[per_id], " Points"), icon = "fa-pencil")
+valueBox(value = str_c(unlist(dashboard_data$mug$team[dashboard_data$mug$scoringPeriodId==per_id]), collapse = " & "), caption = str_c("Week ", params$per_id, " Mug (Best Team): ", dashboard_data$mug$week_points[dashboard_data$mug$scoringPeriodId==per_id], " Points"), icon = "fa-pencil")
 ```
 
 ### 
 
 ```{r}
-valueBox(value = str_c(unlist(dashboard_data$plunger$team[per_id]), collapse = " & "), caption = str_c("Week ", params$per_id, " Plunger (Worst Team): ", dashboard_data$plunger$week_points[per_id], " Points"), icon = "fa-pencil")
+valueBox(value = str_c(unlist(dashboard_data$plunger$team[dashboard_data$plunger$scoringPeriodId==per_id]), collapse = " & "), caption = str_c("Week ", params$per_id, " Plunger (Worst Team): ", dashboard_data$plunger$week_points[dashboard_data$plunger$scoringPeriodId==per_id], " Points"), icon = "fa-pencil")
 ```
 
 ### 
@@ -136,7 +138,7 @@ gauge(dashboard_data$best_coach$week_points[per_id], min = 0, max = dashboard_da
 ```
 
 
-Row {data-height=300}
+Row {data-height=500}
 -------------------------------------
     
 ### Player Performance Week `r per_id`
@@ -151,8 +153,8 @@ dashboard_data$players_letting_down_week
 dashboard_data$letting_players_down
 ```
 
-Row {data-height=300}
--------------------------------------
+<!-- Row {data-height=500} -->
+<!-- ------------------------------------- -->
     
 ### Player Performance Season
     
