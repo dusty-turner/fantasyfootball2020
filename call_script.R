@@ -5,11 +5,11 @@ library(tidyverse)
 # names <- list("OA")
 leagueID <- list(847888,35354777,89417258,206814)
 names <- list("jim","headshed","OA","Twitter_Guy")
-per_id <- 7
+per_id <- 9
 
 run_reports <- function(leagueID, per_id = per_id, names) {
-  # leagueID=89417258
-  # per_id=1
+  # leagueID=847888
+  # per_id=9
   # unlink("ff2020_reports",recursive = T,force = T)
   
   if(!dir.exists("03_ff2020_reports")){
@@ -24,9 +24,6 @@ run_reports <- function(leagueID, per_id = per_id, names) {
 
   file.copy(from=str_c("ffdashboard_",names,"_",per_id,".html"),
             to=str_c("03_ff2020_reports/ffdashboard_",names,"_",per_id,".html" ),overwrite = T)
-
-  file.copy(from=str_c("ffdashboard_",names,"_",per_id,".html"),
-            to=str_c("03_ff2020_reports/ffdashboard_",names,"_current.html" ),overwrite = T)
 
   file.remove(paste0(getwd(),"/","ffdashboard_",names,"_",per_id,".html"))
 
