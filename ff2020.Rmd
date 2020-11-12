@@ -148,7 +148,7 @@ dashboard_data$players_letting_down_week
 ### Coaching Performance Week `r per_id`
 
 ```{r}
-dashboard_data$letting_players_down
+dashboard_data$letting_players_down_week
 ```
 
 Row {data-height=300}
@@ -163,7 +163,7 @@ dashboard_data$players_letting_down_overall
 ### Coaching Performance Season
 
 ```{r}
-dashboard_data$letting_players_down_week
+dashboard_data$letting_players_down_season
 ```
 
 Team Report

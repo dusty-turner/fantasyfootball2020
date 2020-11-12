@@ -1,8 +1,8 @@
 library(tidyverse)
 library(ggrepel)
 
-leagueID <- 847888
-per_id <- 5
+# leagueID <- 847888
+# per_id <- 7
 
 get_dashboard_data <- function(leagueID = 89417258, per_id = per_id){
 
@@ -543,6 +543,7 @@ all_list <- list(
   players_letting_down_week = players_letting_down_week,
   players_letting_down_overall = players_letting_down_overall,
   letting_players_down_week = letting_players_down_week,
+  letting_players_down_season = letting_players_down_season,
   plots = plots,
   player_predictions_hist = player_predictions_hist,
   mugtally = mugtally,
