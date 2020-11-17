@@ -202,6 +202,7 @@ total_standings <-
   dplyr::ungroup() %>% 
   dplyr::mutate(luck = (-win_perc + week_win_perc)/sqrt(2)) %>% 
   dplyr::mutate(win_perc = round(win_perc,4))
+  # select(-LastThree)
   
 
 luck_help_df = tibble(win_perc = c(0.3,0.3,.7,.7), week_win_perc = c(0,1,1,0), labs = c("Bad","Unlucky","Good","Lucky"))
@@ -550,6 +551,7 @@ all_list <- list(
   players_letting_down_week = players_letting_down_week,
   players_letting_down_overall = players_letting_down_overall,
   letting_players_down_week = letting_players_down_week,
+  letting_players_down_season = letting_players_down_season,
   plots = plots,
   player_predictions_hist = player_predictions_hist,
   mugtally = mugtally,
